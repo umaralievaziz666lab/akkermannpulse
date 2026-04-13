@@ -1,0 +1,1009 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Akkermann Pulse — Админ</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',system-ui,sans-serif;background:#e8e7e3;color:#0f1c2c;min-height:100vh}
+:root{--bg:#e8e7e3;--bg2:#ffffff;--bg3:#f2f1ee;--bd:#d1cfc9;--t1:#0f1c2c;--t2:#2a3f52;--t3:#5a7080;--acc:#f53d2d;--navy:#0f1c2c;--red:#f53d2d;--sidebar:230px}
+
+/* AUTH */
+#authScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#f53d2d18,#c42b1c18)}
+.auth-card{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(245,61,45,.15)}
+
+/* LAYOUT */
+#adminApp{display:none}
+.sidebar{width:var(--sidebar);background:var(--navy);border-right:3px solid var(--red);position:fixed;top:0;left:0;bottom:0;z-index:50;display:flex;flex-direction:column;overflow-y:auto}
+.sb-logo{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sb-logo .t{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(135deg,#f53d2d,#c42b1c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sb-logo .s{font-size:10px;color:var(--t3);margin-top:1px}
+.sb-nav{flex:1;padding:10px 8px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:3px;cursor:pointer;font-size:13px;font-weight:700;color:rgba(232,231,227,0.6);margin-bottom:2px;border:none;background:none;width:100%;text-align:left;transition:.15s;font-family:"Barlow Condensed",sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.ni:hover{background:rgba(255,255,255,0.1);color:#e8e7e3}
+.ni.active{background:var(--red);color:#fff}
+.ni .ic{width:18px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.65}
+.ni .ic svg{width:16px;height:16px;stroke-width:1.5}
+.ni:hover .ic,.ni.active .ic{opacity:1}
+.nb{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;min-width:16px;text-align:center}
+.sb-btm{padding:10px 8px;border-top:1px solid rgba(255,255,255,0.1)}
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+.topbar{background:var(--navy);border-bottom:3px solid var(--red);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;color:#e8e7e3}
+.content{padding:20px;min-height:calc(100vh - 52px)}
+.page{display:none}.page.active{display:block}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.sc{background:#fff;border-radius:3px;padding:14px 16px;border:1px solid var(--bd);border-top:3px solid var(--red);display:flex;align-items:center;gap:12px}
+.si{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+
+/* CHARTS */
+.cr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.cc{background:#fff;border-radius:3px;border:1px solid var(--bd);border-top:3px solid var(--red);padding:14px}
+.ct{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+
+/* CARD / TABLE */
+.card{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:14px}
+.ch{padding:11px 16px;border-bottom:2px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--navy)}
+.ct2{font-size:13px;font-weight:800;color:#e8e7e3;font-family:"Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em}
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 13px;text-align:left;font-size:11px;font-weight:700;color:#e8e7e3;text-transform:uppercase;letter-spacing:.06em;background:var(--navy);border-bottom:2px solid var(--red);white-space:nowrap;font-family:"Barlow Condensed",sans-serif}
+tbody td{padding:9px 13px;font-size:13px;color:var(--t2);border-bottom:1px solid var(--bg3);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f5f4f0;cursor:pointer}
+
+/* BADGES */
+.b{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-new{background:#f0fdf4;color:#15803d}.b-work{background:#eff6ff;color:#1d4ed8}
+.b-approved{background:#dcfce7;color:#15803d}.b-rejected{background:#fef2f2;color:#dc2626}
+.b-completed{background:#faf5ff;color:#7c3aed}
+.b-idea{background:#ecfdf5;color:#059669}.b-risk{background:#fff7ed;color:#c2410c}
+.b-admin{background:rgba(245,61,45,.12);color:#c42b1c}
+.b-manager{background:rgba(245,158,11,.12);color:#b45309}
+.b-engineer{background:rgba(59,130,246,.12);color:#1d4ed8}
+.b-master{background:rgba(16,185,129,.12);color:#065f46}
+.b-staff{background:var(--bg3);color:var(--t2)}
+
+/* BTNS */
+.btn{padding:7px 13px;border-radius:3px;border:none;cursor:pointer;font-size:12px;font-weight:700;transition:.15s;display:inline-flex;align-items:center;gap:5px;font-family:"Barlow Condensed",sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.bp{background:linear-gradient(135deg,#f53d2d,#c42b1c);color:#fff}.bp:hover{opacity:.9}
+.bg{background:rgba(255,255,255,0.1);color:#e8e7e3;border:1px solid rgba(255,255,255,0.2)}.bg:hover{background:rgba(255,255,255,0.2)}
+.bd{background:#fef2f2;color:#ef4444;border:1px solid #fecaca}
+.content .bg{background:var(--bg3);color:var(--t2);border:1px solid var(--bd)}
+.content .bg:hover{background:var(--bd);color:var(--t1)}
+.bsm{padding:4px 9px;font-size:11px}
+
+/* INPUTS */
+.inp{width:100%;padding:8px 11px;border:1px solid var(--bd);border-radius:3px;background:var(--bg3);color:var(--t1);font-size:13px;outline:none;font-family:inherit;transition:.15s;border-bottom:2px solid var(--bd)}
+.inp:focus{border-color:var(--red);border-bottom-color:var(--red);background:#fff}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.mbg.open{display:flex}
+.mbox{background:#fff;border-radius:4px;width:100%;max-width:600px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,.25);margin:auto;border-top:3px solid var(--red)}
+.mbox.sm{max-width:460px}.mbox.lg{max-width:820px}
+.mh{padding:14px 18px;border-bottom:2px solid var(--red);display:flex;align-items:center;justify-content:space-between;background:var(--navy);flex-shrink:0;color:#e8e7e3}
+.mh span{color:#e8e7e3!important;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.mb{overflow-y:auto;padding:18px;max-height:72vh}
+.mf{padding:12px 18px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;background:var(--bg3)}
+.mc{background:none;border:none;font-size:20px;color:rgba(232,231,227,0.7);cursor:pointer;padding:2px 6px}
+
+/* FILTERS */
+.fr{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.sb{position:relative;flex:1;min-width:180px}
+.sb svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3)}
+.sb input{width:100%;padding:8px 11px 8px 32px;border:1px solid var(--bd);border-radius:9px;background:var(--bg3);color:var(--t1);font-size:13px;outline:none}
+.sb input:focus{border-color:var(--acc)}
+
+/* DATE RANGE */
+.dr{display:flex;gap:6px;align-items:center;background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:5px 10px}
+.dr input[type=date]{border:none;background:transparent;color:var(--t1);font-size:12px;outline:none;cursor:pointer}
+
+/* AVATAR */
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:var(--red);flex-shrink:0}
+
+/* AUTOCOMPLETE */
+.aclist{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--bd);border-radius:9px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:200;max-height:180px;overflow-y:auto;margin-top:2px}
+.acitem{padding:8px 12px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px}
+.acitem:hover{background:var(--bg3)}
+
+/* MEDIA THUMB */
+.mthumb{width:42px;height:42px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--bd)}
+
+/* GALLERY */
+#gOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;align-items:center;justify-content:center}
+#gOverlay.open{display:flex}
+
+/* LOGS */
+.li{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg3)}
+.li:last-child{border-bottom:none}
+.ld{width:8px;height:8px;border-radius:50%;background:var(--acc);flex-shrink:0;margin-top:4px}
+
+/* DEADLINE */
+.dl-warn{color:#dc2626!important;font-weight:700!important}
+
+/* DEPT TREE */
+.dp{padding:10px 12px;background:rgba(245,61,45,.05);border-radius:10px;border:1px solid rgba(245,61,45,.15);margin-bottom:8px}
+.dc{padding:6px 12px 6px 28px;border-left:2px solid var(--bd);margin-left:16px;margin-top:3px;display:flex;align-items:center;justify-content:space-between;border-radius:0 8px 8px 0}
+
+/* TOAST */
+#tc{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--navy);color:#fff;padding:10px 16px;border-radius:3px;font-size:13px;font-weight:700;font-family:"Barlow Condensed",sans-serif;letter-spacing:.04em;border-left:3px solid var(--red);box-shadow:0 4px 20px rgba(0,0,0,.3);animation:tIn .3s ease}
+@keyframes tIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* RESPONSIVE */
+@media(max-width:960px){.sg{grid-template-columns:1fr 1fr}.cr{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.sg{grid-template-columns:1fr 1fr}.cr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:54px;height:54px;border-radius:6px;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 12px"><svg width="28" height="28" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="1.5"/></svg></div>
+      <div style="font-size:17px;font-weight:800;background:linear-gradient(135deg,#f53d2d,#c42b1c);-webkit-background-clip:text;-webkit-text-fill-color:transparent">AKKERMANN PULSE</div>
+      <div style="font-size:12px;color:var(--t3);margin-top:3px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">ПАНЕЛЬ АДМИНИСТРАТОРА</div>
+    </div>
+    <form id="authForm" style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="lbl">Табельный номер</label><input class="inp" id="authId" required placeholder="11111"></div>
+      <button type="submit" class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px;letter-spacing:.08em" id="authBtn">ВОЙТИ</button>
+      <div id="authErr" style="display:none;color:#ef4444;font-size:12px;text-align:center"></div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="adminApp">
+  <aside class="sidebar">
+    <div class="sb-logo"><div class="t" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:.12em;color:#e8e7e3">AKKERMANN</div><div class="s" style="font-size:10px;color:rgba(232,231,227,0.5);letter-spacing:.1em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif">PULSE · ADMIN</div></div>
+    <nav class="sb-nav">
+      <button class="ni active" onclick="showPage('dashboard')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="3" y="14" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="14" width="7" height="7" stroke-width="2" rx="1"/></svg></span>Дашборд</button>
+      <button class="ni" onclick="showPage('requests')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 12h.01M8 12h.01M16 12h.01"/></svg></span>Заявки<span class="nb" id="nbReq">0</span></button>
+      <button class="ni" onclick="showPage('users')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>Пользователи</button>
+      <button class="ni" onclick="showPage('departments')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21v-6h6v6"/></svg></span>Участки</button>
+      <button class="ni" onclick="showPage('roles')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></span>Роли</button>
+      <button class="ni" onclick="showPage('news')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>Новости</button>
+      <button class="ni" onclick="showPage('achievements')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></span>Достижения</button>
+      <button class="ni" onclick="showPage('shop')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>Магазин</button>
+    </nav>
+    <div class="sb-btm">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;background:rgba(255,255,255,0.08)">
+        <div class="av" style="width:30px;height:30px;font-size:11px" id="adminAv">АД</div>
+        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e8e7e3" id="adminName">Admin</div><div style="font-size:10px;color:rgba(232,231,227,0.5)" id="adminRoleLbl">Администратор</div></div>
+        <button onclick="adminLogout()" style="background:none;border:none;cursor:pointer;color:rgba(232,231,227,0.6);font-size:14px">🚪</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="font-size:18px;font-weight:800;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em" id="pgTitle">Дашборд</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:11px;color:rgba(232,231,227,0.5)" id="lastUpd"></span>
+        <button class="btn bsm" onclick="refreshAll()" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25);border-radius:3px">🔄 Обновить</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="sg">
+          <div class="sc"><div class="si" style="background:rgba(245,61,45,.1)"><svg width="20" height="20" fill="none" stroke="#f53d2d" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stTotal">—</div><div style="font-size:11px;color:var(--t3)">Всего заявок</div></div></div>
+          <div class="sc"><div class="si" style="background:rgba(15,28,44,.08)"><svg width="20" height="20" fill="none" stroke="#0f1c2c" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stNew">—</div><div style="font-size:11px;color:var(--t3)">Новые</div></div></div>
+          <div class="sc"><div class="si" style="background:rgba(59,130,246,.1)"><svg width="20" height="20" fill="none" stroke="#3b82f6" viewBox="0 0 24 24"><path stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stWork">—</div><div style="font-size:11px;color:var(--t3)">В работе</div></div></div>
+          <div class="sc"><div class="si" style="background:rgba(16,185,129,.1)"><svg width="20" height="20" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stDone">—</div><div style="font-size:11px;color:var(--t3)">Выполнено</div></div></div>
+        </div>
+        <div class="sg" style="grid-template-columns:repeat(3,1fr)">
+          <div class="sc"><div class="si" style="background:rgba(15,28,44,.06)"><svg width="20" height="20" fill="none" stroke="#0f1c2c" viewBox="0 0 24 24"><path stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stUsers">—</div><div style="font-size:11px;color:var(--t3)">Пользователей</div></div></div>
+          <div class="sc"><div class="si" style="background:rgba(16,185,129,.1)"><svg width="20" height="20" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stIdeas">—</div><div style="font-size:11px;color:var(--t3)">Идей</div></div></div>
+          <div class="sc"><div class="si" style="background:rgba(245,158,11,.1)"><svg width="20" height="20" fill="none" stroke="#f59e0b" viewBox="0 0 24 24"><path stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div><div><div style="font-size:22px;font-weight:800" id="stRisks">—</div><div style="font-size:11px;color:var(--t3)">Рисков</div></div></div>
+        </div>
+        <!-- Date filter -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:var(--t3)">Период:</span>
+          <div class="dr">
+            <span style="font-size:11px;color:var(--t3)">с</span>
+            <input type="date" id="dateFrom" onchange="renderCharts()">
+            <span style="font-size:11px;color:var(--t3)">по</span>
+            <input type="date" id="dateTo" onchange="renderCharts()">
+          </div>
+          <button class="btn bg bsm" onclick="setDR(7)">7д</button>
+          <button class="btn bg bsm" onclick="setDR(30)">30д</button>
+          <button class="btn bg bsm" onclick="setDR(90)">3 мес</button>
+          <button class="btn bg bsm" onclick="setDR(0)">Всё</button>
+        </div>
+        <div class="cr">
+          <div class="cc"><div class="ct">Статусы</div><canvas id="cStatus" height="150"></canvas></div>
+          <div class="cc"><div class="ct">По участкам</div><canvas id="cLoc" height="150"></canvas></div>
+          <div class="cc"><div class="ct">Идеи / Риски</div><canvas id="cTypes" height="150"></canvas></div>
+        </div>
+        <div class="cc" style="margin-bottom:14px"><div class="ct">Активность по дням</div><canvas id="cAct" height="70"></canvas></div>
+        <div class="card">
+          <div class="ch"><div class="ct2">Последние заявки</div><button class="btn bsm" onclick="showPage('requests')" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25)">Все →</button></div>
+          <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Автор</th><th>Участок</th><th>Описание</th><th>Статус</th><th>Дата</th></tr></thead><tbody id="recentReqs"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- REQUESTS -->
+      <div class="page" id="page-requests">
+        <div class="fr">
+          <div class="sb"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input id="rqSearch" placeholder="Поиск…" oninput="filterReqs()"></div>
+          <select class="inp" style="width:130px" id="rqSt" onchange="filterReqs()">
+            <option value="all">Все статусы</option><option value="new">Новые</option><option value="work">В работе</option><option value="approved">Принято</option><option value="rejected">Отклонено</option><option value="completed">Выполнено</option>
+          </select>
+          <select class="inp" style="width:110px" id="rqTp" onchange="filterReqs()">
+            <option value="all">Все типы</option><option value="idea">💡 Идеи</option><option value="risk">⚠️ Риски</option>
+          </select>
+          <select class="inp" style="width:130px" id="rqUrg" onchange="filterReqs()">
+            <option value="all">Все уровни</option><option value="1">🔴 Уровень 1</option><option value="2">🟡 Уровень 2</option><option value="3">🟢 Уровень 3</option>
+          </select>
+          <select class="inp" style="width:140px" id="rqLoc" onchange="filterReqs()">
+            <option value="all">Все участки</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct2">Заявки <span id="rqCount" style="font-weight:400;color:var(--t3)"></span></div></div>
+          <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Срочность</th><th>Автор</th><th>Участок</th><th>Медиа</th><th>Описание</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th></tr></thead><tbody id="rqTable"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="fr">
+          <div class="sb"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input id="uSearch" placeholder="Поиск…" oninput="filterUsers()"></div>
+          <select class="inp" style="width:150px" id="uRole" onchange="filterUsers()">
+            <option value="all">Все роли</option><option value="admin">Администратор</option><option value="manager">Руководитель</option><option value="engineer">Инженер</option><option value="master">Мастер</option><option value="staff">Сотрудник</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="ch"><div class="ct2">Пользователи <span id="uCount" style="font-weight:400;color:var(--t3)"></span></div></div>
+          <table><thead><tr><th>Сотрудник</th><th>Табельный</th><th>Участок</th><th>Роль</th><th>Баллы</th><th>Уровень</th><th>Заявок</th><th></th></tr></thead><tbody id="uTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- DEPARTMENTS -->
+      <div class="page" id="page-departments">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp" onclick="openDeptModal()">+ Добавить участок</button></div>
+        <div class="card"><div class="ch"><div class="ct2">Структура участков</div></div><div id="deptTree" style="padding:14px"></div></div>
+        <div class="card" style="padding:14px">
+          <div style="font-size:12px;color:var(--t3);line-height:1.6">
+            ⚙️ <strong>Как работает иерархия:</strong> Корневой участок — это цех или подразделение (например «Цех 1»). Дочерний — конкретное рабочее место внутри него (например «Сверлильный станок»). При выборе участка в мобильном приложении пользователи видят оба уровня.
+          </div>
+        </div>
+      </div>
+
+      <!-- ROLES -->
+      <div class="page" id="page-roles">
+        <div class="card"><div class="ch"><div class="ct2">Роли и права доступа</div></div><div id="rolesContent" style="padding:16px"></div></div>
+      </div>
+
+      <!-- NEWS -->
+      <div class="page" id="page-news">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp" onclick="openNewsModal()">+ Новая новость</button></div>
+        <div id="newsList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+
+      <!-- ACHIEVEMENTS -->
+      <div class="page" id="page-achievements">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp" onclick="openAchModal()">+ Добавить</button></div>
+        <div id="achGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px"></div>
+      </div>
+
+      <!-- SHOP -->
+      <div class="page" id="page-shop">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp" onclick="openShopModal()">+ Добавить</button></div>
+        <div id="shopGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- REQUEST MODAL -->
+<div class="mbg" id="reqModal">
+  <div class="mbox lg">
+    <div class="mh"><span style="font-size:14px;font-weight:700" id="reqMTitle">Заявка</span><button class="mc" onclick="closeModal('reqModal')">&times;</button></div>
+    <div class="mb" id="reqMBody"></div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('reqModal')">Закрыть</button><button class="btn bp" onclick="saveReq()">💾 Сохранить</button></div>
+  </div>
+</div>
+
+<!-- LOGS MODAL -->
+<div class="mbg" id="logsModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700">История изменений</span><button class="mc" onclick="closeModal('logsModal')">&times;</button></div>
+    <div class="mb" id="logsMBody"></div>
+  </div>
+</div>
+
+<!-- USER MODAL -->
+<div class="mbg" id="userModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700" id="uMTitle">Пользователь</span><button class="mc" onclick="closeModal('userModal')">&times;</button></div>
+    <div class="mb" id="uMBody"></div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('userModal')">Закрыть</button><button class="btn bp" onclick="saveUser()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- DEPT MODAL -->
+<div class="mbg" id="deptModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700" id="dMTitle">Участок</span><button class="mc" onclick="closeModal('deptModal')">&times;</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="dId">
+        <div><label class="lbl">Название участка</label><input class="inp" id="dName" placeholder="Например: Цех 1 или Сверлильный станок"></div>
+        <div><label class="lbl">Родительский участок (если дочерний)</label><select class="inp" id="dParent"><option value="">— Корневой (верхний уровень) —</option></select></div>
+        <div><label class="lbl">Описание (необязательно)</label><input class="inp" id="dDesc" placeholder="Краткое описание"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('deptModal')">Отмена</button><button class="btn bp" onclick="saveDept()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- NEWS MODAL -->
+<div class="mbg" id="newsModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700" id="nMTitle">Новость</span><button class="mc" onclick="closeModal('newsModal')">&times;</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="nId">
+        <div><label class="lbl">Заголовок</label><input class="inp" id="nTitle" required></div>
+        <div><label class="lbl">Текст</label><textarea class="inp" id="nContent" rows="5" style="resize:vertical"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label class="lbl">Категория</label><select class="inp" id="nCat"><option value="announcement">📢 Объявление</option><option value="achievement">🏆 Достижение</option><option value="safety">🛡️ Безопасность</option><option value="general">📌 Общее</option></select></div>
+          <div><label class="lbl">Источник</label><input class="inp" id="nSrc"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('newsModal')">Отмена</button><button class="btn bp" onclick="saveNews()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- ACH MODAL -->
+<div class="mbg" id="achModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700">Достижение</span><button class="mc" onclick="closeModal('achModal')">&times;</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="aId">
+        <div style="display:grid;grid-template-columns:70px 1fr;gap:10px">
+          <div><label class="lbl">Иконка</label><input class="inp" id="aIcon" style="text-align:center;font-size:22px"></div>
+          <div><label class="lbl">Название</label><input class="inp" id="aTitle" required></div>
+        </div>
+        <div><label class="lbl">Описание</label><input class="inp" id="aDesc"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><label class="lbl">Тип цели</label><select class="inp" id="aTType"><option value="posts">Заявок</option><option value="ideas">Идей</option><option value="risks">Рисков</option><option value="likes">Лайков</option><option value="points">Баллов</option><option value="manual">Вручную</option></select></div>
+          <div><label class="lbl">Цель</label><input class="inp" id="aTarget" type="number" min="1" value="1"></div>
+          <div><label class="lbl">Баллы</label><input class="inp" id="aPoints" type="number" min="1" value="10"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('achModal')">Отмена</button><button class="btn bp" onclick="saveAch()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="mbg" id="shopModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700">Товар</span><button class="mc" onclick="closeModal('shopModal')">&times;</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="sId">
+        <div style="display:grid;grid-template-columns:70px 1fr;gap:10px">
+          <div><label class="lbl">Иконка</label><input class="inp" id="sIcon" style="text-align:center;font-size:22px"></div>
+          <div><label class="lbl">Название</label><input class="inp" id="sTitle" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label class="lbl">Баллы</label><input class="inp" id="sPoints" type="number" min="1" value="100"></div>
+          <div><label class="lbl">Цвет (необяз.)</label><input class="inp" id="sColor"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('shopModal')">Отмена</button><button class="btn bp" onclick="saveShopItem()">Сохранить</button></div>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<div id="gOverlay" onclick="closeGal()">
+  <div onclick="event.stopPropagation()" style="position:relative;max-width:90vw;max-height:90vh" id="gInner"></div>
+</div>
+
+<div id="tc"></div>
+
+<script>
+const SB = window.supabase.createClient(
+  'https://slshulewvdanriwvmitu.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsc2h1bGV3dmRhbnJpd3ZtaXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzExOTQsImV4cCI6MjA4ODk0NzE5NH0.jUsiWjf87pdwMRBsaxt76IeXRKZB7obYoq90yDDDLcc'
+);
+
+
+// ── SECURITY: Session token stored in sessionStorage ──────────────────────
+const SESSION_KEY = 'ak_admin_session';
+function saveSession(userId) { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({id:userId,ts:Date.now()})); } catch(e){} }
+function clearSession() { try { sessionStorage.removeItem(SESSION_KEY); } catch(e){} }
+function getSession() { try { const s=sessionStorage.getItem(SESSION_KEY); return s?JSON.parse(s):null; } catch(e){return null;} }
+
+// ── SECURITY: Input sanitization ─────────────────────────────────────────
+function sanitize(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Rate limit for admin actions
+const _adminRateLimits = {};
+function adminRateCheck(key, maxPerMin=10) {
+  const now = Date.now();
+  if (!_adminRateLimits[key]) _adminRateLimits[key] = [];
+  _adminRateLimits[key] = _adminRateLimits[key].filter(t=>now-t<60000);
+  if (_adminRateLimits[key].length >= maxPerMin) { toast('Слишком много действий. Подождите.','err'); return false; }
+  _adminRateLimits[key].push(now);
+  return true;
+}
+
+// ── GLOBALS ─────────────────────────────────────────────────────
+let adminUser=null, allReqs=[], allUsers=[], allDepts=[];
+let editReqId=null, editUserId=null;
+let charts={};
+
+const ROLES = {
+  admin:   {label:'Администратор', cls:'b-admin',    icon:'👑'},
+  manager: {label:'Руководитель',  cls:'b-manager',  icon:'🎯'},
+  engineer:{label:'Инженер',       cls:'b-engineer', icon:'⚙️'},
+  master:  {label:'Мастер',        cls:'b-master',   icon:'🔧'},
+  staff:   {label:'Сотрудник',     cls:'b-staff',    icon:'👤'},
+};
+const STA = {
+  new:{l:'Новая',c:'b-new'}, work:{l:'В работе',c:'b-work'},
+  approved:{l:'Принята',c:'b-approved'}, rejected:{l:'Отклонена',c:'b-rejected'},
+  completed:{l:'Выполнена',c:'b-completed'},
+};
+const LVL = [{min:0,max:99,l:'🌱 Новичок'},{min:100,max:249,l:'🌿 Активист'},{min:250,max:499,l:'⭐ Участник'},{min:500,max:999,l:'💎 Эксперт'},{min:1000,max:1999,l:'🏆 Чемпион'},{min:2000,max:3999,l:'🔥 Мастер'},{min:4000,max:7999,l:'👑 Легенда'},{min:8000,max:Infinity,l:'🚀 Кайзен-Боец'}];
+const getLvl = p => LVL.find(l=>p>=l.min&&p<=l.max)?.l || '🌱 Новичок';
+const pad = id => '#'+String(id).padStart(5,'0');
+const fd = iso => { if(!iso) return '—'; const d=new Date(iso); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; };
+const fdt = iso => { if(!iso) return '—'; const d=new Date(iso); return `${fd(iso)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const ini = n => (n||'?').split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+const pm = m => { try { return Array.isArray(m)?m:JSON.parse(m||'[]'); } catch { return []; } };
+
+// ── UTILS ────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function toast(msg, type='ok') {
+  const el=document.createElement('div'); el.className='toast';
+  el.style.background=type==='err'?'#ef4444':type==='info'?'#3b82f6':'#10b981';
+  el.textContent=msg; document.getElementById('tc').appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+function openGal(src) {
+  const isV=src.startsWith('data:video');
+  document.getElementById('gInner').innerHTML=`<button onclick="closeGal()" style="position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1">&times;</button>${isV?`<video src="${src}" controls style="max-width:90vw;max-height:88vh;border-radius:10px">`:`<img src="${src}" style="max-width:90vw;max-height:88vh;border-radius:10px;object-fit:contain">` }`;
+  document.getElementById('gOverlay').classList.add('open');
+}
+function closeGal() { document.getElementById('gOverlay').classList.remove('open'); }
+
+// ── AUTH ──────────────────────────────────────────────────────────
+document.getElementById('authForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn=document.getElementById('authBtn'); btn.disabled=true; btn.textContent='…';
+  const err=document.getElementById('authErr'); err.style.display='none';
+  const {data}=await SB.from('users').select('*').eq('id',document.getElementById('authId').value.trim()).single();
+  btn.disabled=false; btn.textContent='Войти';
+  if(!data||!['admin','manager'].includes(data.role)){err.style.display='';err.textContent='❌ Нет доступа. Требуется роль Администратора или Руководителя.';return;}
+  // SECURITY: check account is not locked
+  if(data.is_locked){err.style.display='';err.textContent='❌ Аккаунт заблокирован. Обратитесь к администратору.';return;}
+  adminUser=data;
+  saveSession(data.id);
+  document.getElementById('adminName').textContent=data.name;
+  document.getElementById('adminAv').textContent=ini(data.name);
+  const r=ROLES[data.role];if(r)document.getElementById('adminRoleLbl').textContent=r.label;
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('adminApp').style.display='block';
+  setDR(30);
+  await refreshAll();
+  SB.channel('admin-rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'requests'},()=>loadReqs())
+    .on('postgres_changes',{event:'*',schema:'public',table:'users'},()=>loadUsers())
+    .subscribe();
+});
+function adminLogout(){if(!confirm('Выйти?'))return;clearSession();document.getElementById('adminApp').style.display='none';document.getElementById('authScreen').style.display='flex';adminUser=null;}
+
+// ── NAVIGATION ────────────────────────────────────────────────────
+const PT={dashboard:'Дашборд',requests:'Заявки',users:'Пользователи',departments:'Участки',roles:'Роли',news:'Новости',achievements:'Достижения',shop:'Магазин'};
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  // Match by onclick attribute, not text (text contains SVG now)
+  document.querySelectorAll('.ni').forEach(n=>{
+    if(n.getAttribute('onclick')===`showPage('${id}')`) n.classList.add('active');
+  });
+  document.getElementById('pgTitle').textContent=PT[id]||id;
+  // Page-specific init
+  if(id==='requests') { filterReqs(); }
+  if(id==='users')    { filterUsers(); }
+  if(id==='news')     { loadNewsPage(); }
+  if(id==='achievements'){ loadAchPage(); }
+  if(id==='shop')     { loadShopPage(); }
+  if(id==='departments'){ loadDepts(); }
+  if(id==='roles')    { renderRoles(); }
+}
+
+// ── REFRESH ALL ───────────────────────────────────────────────────
+async function refreshAll(){
+  document.getElementById('lastUpd').textContent='Обновлено: '+new Date().toLocaleTimeString('ru');
+  await Promise.all([loadReqs(),loadUsers(),loadDeptsData()]);
+  renderDash();renderCharts();
+}
+
+// ── LOAD DATA ──────────────────────────────────────────────────────
+async function loadReqs(){
+  try{
+    // select(*) is safest - avoids column name issues
+    // order by id desc = newest first
+    const{data, error}=await SB.from('requests').select('*').order('id',{ascending:false});
+    if(error){
+      console.error('loadReqs error:', error.message, error.code);
+      // RLS policy error or network - show friendly message
+      const msg = error.code === '42501' ? 'Нет доступа к данным (RLS). Проверьте настройки Supabase.' : 'Ошибка загрузки: ' + error.message;
+      toast(msg, 'err');
+      if(document.getElementById('rqTable')) document.getElementById('rqTable').innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#ef4444">⚠️ ${msg}</td></tr>`;
+      return;
+    }
+    allReqs = data || [];
+    console.log('Loaded requests:', allReqs.length);
+    // Update badge
+    const nb=document.getElementById('nbReq');
+    if(nb) nb.textContent = allReqs.filter(r=>r.status==='new').length;
+    // Render table (only if page is visible)
+    filterReqs();
+    // Render recent on dashboard
+    const rb=document.getElementById('recentReqs');
+    if(rb){
+      rb.innerHTML='';
+      allReqs.slice(0,7).forEach(r=>{try{rb.appendChild(mkReqRow(r));}catch(e){console.warn(e);}});
+    }
+  }catch(e){
+    console.error('loadReqs exception:', e);
+  }
+}
+async function loadUsers(){
+  const{data}=await SB.from('users').select('*').order('points',{ascending:false});
+  allUsers=data||[];filterUsers();
+}
+async function loadDeptsData(){
+  try{const{data}=await SB.from('departments').select('*').order('name');allDepts=data||[];}catch(e){allDepts=[];}
+  // Update location filter in requests page
+  const sel=document.getElementById('rqLoc');if(!sel)return;
+  const parents=allDepts.filter(d=>!d.parent_id);
+  let opts='<option value="all">Все участки</option>';
+  if(parents.length){parents.forEach(p=>{opts+=`<option value="${p.name}">${p.name}</option>`;allDepts.filter(d=>d.parent_id===p.id).forEach(c=>{opts+=`<option value="${c.name}">&nbsp;&nbsp;└ ${c.name}</option>`;});});}
+  else{allDepts.forEach(d=>{opts+=`<option value="${d.name}">${d.name}</option>`;});}
+  sel.innerHTML=opts;
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────
+
+
+function renderDash(){
+  const r=allReqs;
+  document.getElementById('stTotal').textContent=r.length;
+  document.getElementById('stNew').textContent=r.filter(x=>x.status==='new').length;
+  document.getElementById('stWork').textContent=r.filter(x=>x.status==='work').length;
+  document.getElementById('stDone').textContent=r.filter(x=>x.status==='completed'||x.status==='approved').length;
+  document.getElementById('stUsers').textContent=allUsers.length;
+  document.getElementById('stIdeas').textContent=r.filter(x=>x.type==='idea').length;
+  document.getElementById('stRisks').textContent=r.filter(x=>x.type==='risk').length;
+}
+function getFR(){
+  const from=document.getElementById('dateFrom')?.value;
+  const to=document.getElementById('dateTo')?.value;
+  if(!from&&!to)return allReqs;
+  return allReqs.filter(r=>{const d=(r.date||r.created_at||'').slice(0,10);if(from&&d<from)return false;if(to&&d>to)return false;return true;});
+}
+function setDR(days){
+  const to=new Date(),from=new Date();
+  if(days>0)from.setDate(to.getDate()-days);
+  document.getElementById('dateTo').value=to.toISOString().slice(0,10);
+  document.getElementById('dateFrom').value=days>0?from.toISOString().slice(0,10):'';
+  renderCharts();
+}
+function renderCharts(){
+  const r=getFR();
+  const dk=id=>{if(charts[id]){charts[id].destroy();delete charts[id];}};
+  dk('s');charts.s=new Chart(document.getElementById('cStatus'),{type:'doughnut',data:{labels:['Новые','В работе','Принято','Отклонено','Выполнено'],datasets:[{data:['new','work','approved','rejected','completed'].map(s=>r.filter(x=>x.status===s).length),backgroundColor:['#f59e0b','#3b82f6','#10b981','#ef4444','#8b5cf6'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},cutout:'60%'}});
+  dk('l');const lc={};r.forEach(x=>{lc[x.location||'—']=(lc[x.location||'—']||0)+1;});const le=Object.entries(lc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  charts.l=new Chart(document.getElementById('cLoc'),{type:'bar',data:{labels:le.map(e=>e[0]),datasets:[{data:le.map(e=>e[1]),backgroundColor:'rgba(245,61,45,.7)',borderRadius:4,borderWidth:0}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f2f5'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  dk('t');charts.t=new Chart(document.getElementById('cTypes'),{type:'doughnut',data:{labels:['Идеи','Риски'],datasets:[{data:[r.filter(x=>x.type==='idea').length,r.filter(x=>x.type==='risk').length],backgroundColor:['#10b981','#f59e0b'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},cutout:'60%'}});
+  dk('a');const ds=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);ds.push(d.toISOString().slice(0,10));}
+  charts.a=new Chart(document.getElementById('cAct'),{type:'line',data:{labels:ds.map(d=>d.slice(5)),datasets:[{data:ds.map(d=>r.filter(x=>(x.date||x.created_at||'').slice(0,10)===d).length),borderColor:'#f53d2d',backgroundColor:'rgba(245,61,45,.08)',borderWidth:2,pointRadius:3,fill:true,tension:.4}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f2f5'},ticks:{font:{size:10}}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+}
+function mkReqRow(r){
+  const st=STA[r.status]||STA.new;
+  const tr=document.createElement('tr');tr.style.cursor='pointer';tr.onclick=()=>openReqModal(r.id);
+  tr.innerHTML=`<td style="font-family:monospace;font-size:11px;color:var(--acc)">${pad(r.id)}</td><td><span class="b ${r.type==='idea'?'b-idea':'b-risk'}">${r.type==='idea'?'💡 Идея':'⚠️ Риск'}</span></td><td>${r.anonymous?'<em>Аноним</em>':r.author||'—'}</td><td>${r.location||'—'}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sanitize(r.description)||'—'}</td><td><span class="b ${st.c}">${st.l}</span></td><td style="color:var(--t3)">${fd(r.date||r.created_at)}</td>`;
+  return tr;
+}
+
+// ── REQUESTS TABLE ─────────────────────────────────────────────────
+function filterReqs(){
+  try {
+    const q=(document.getElementById('rqSearch')?.value||'').toLowerCase();
+    const st=document.getElementById('rqSt')?.value||'all';
+    const tp=document.getElementById('rqTp')?.value||'all';
+    const lc=document.getElementById('rqLoc')?.value||'all';
+    let d=[...allReqs];
+    if(q)d=d.filter(r=>String(r.id).includes(q)||(r.author||'').toLowerCase().includes(q)||(r.description||'').toLowerCase().includes(q));
+    if(st!=='all')d=d.filter(r=>r.status===st);
+    if(tp!=='all')d=d.filter(r=>r.type===tp);
+    if(lc!=='all')d=d.filter(r=>r.location===lc);
+    const urg=document.getElementById('rqUrg')?.value||'all';
+    if(urg!=='all')d=d.filter(r=>String(r.risk_urgency)===urg);
+    const countEl=document.getElementById('rqCount');
+    if(countEl)countEl.textContent=`(${d.length})`;
+    const tbody=document.getElementById('rqTable');
+    if(!tbody)return;
+    tbody.innerHTML='';
+    if(!d.length){
+      tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--t3)">Нет заявок</td></tr>`;
+      return;
+    }
+    d.forEach(r=>{
+      try{
+        const st2=STA[r.status]||STA.new;
+        let media=[];
+        try{media=Array.isArray(r.media)?r.media:(r.media?JSON.parse(r.media):[]);}catch(e){media=[];}
+        const thumb=media.length>0?`<img src="${media[0]}" class="mthumb" onclick="event.stopPropagation();openGal('${media[0]}')" onerror="this.style.display='none'">`:
+          `<span style="color:var(--t3);font-size:12px">—</span>`;
+        let dlHtml=`<span style="color:var(--t3)">—</span>`;
+        if(r.deadline){
+          const dl=Math.ceil((new Date(r.deadline)-Date.now())/86400000);
+          dlHtml=`<span class="${dl<=7?'dl-warn':''}" style="font-size:12px">${fd(r.deadline)}${dl<=7&&dl>0?` <small>(${dl}д)</small>`:''}${dl<=0?' ⚠️':''}</span>`;
+        }
+        const tr=document.createElement('tr');
+        tr.style.cursor='pointer';
+        tr.onclick=()=>openReqModal(r.id);
+        tr.innerHTML=`
+          <td style="font-family:monospace;font-size:11px;color:var(--acc);white-space:nowrap">${pad(r.id)}</td>
+          <td><span class="b ${r.type==='idea'?'b-idea':'b-risk'}">${r.type==='idea'?'💡 Идея':'⚠️ Риск'}</span></td>
+          <td>${r.risk_urgency?(()=>{const l={1:'🔴',2:'🟡',3:'🟢'};return `<span style="font-size:14px" title="${{1:'Опасно сейчас',2:'Может привести к травме',3:'Замечание'}[r.risk_urgency]||''}">${l[r.risk_urgency]}</span>`})():'<span style="color:var(--t4)">—</span>'}</td>
+          <td style="white-space:nowrap">${r.anonymous?'<em style="color:var(--t3)">Аноним</em>':(r.author||'—')}</td>
+          <td style="white-space:nowrap">${r.location||'—'}</td>
+          <td onclick="event.stopPropagation()" style="text-align:center">${thumb}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t1)">${r.description||'—'}</td>
+          <td><span class="b ${st2.c}">${st2.l}</span></td>
+          <td style="white-space:nowrap;color:var(--t2)">${r.assigned_to||'<span style="color:var(--t3)">—</span>'}</td>
+          <td style="white-space:nowrap">${dlHtml}</td>`;
+        tbody.appendChild(tr);
+      }catch(rowErr){console.warn('Row render error for req',r.id,rowErr);}
+    });
+  }catch(e){console.error('filterReqs error:',e);}
+}
+
+// ── REQUEST MODAL ──────────────────────────────────────────────────
+function openReqModal(id){
+  const r=allReqs.find(x=>x.id==id);if(!r)return;
+  editReqId=id;
+  document.getElementById('reqMTitle').textContent=`${pad(id)} — ${r.type==='idea'?'💡 Идея':'⚠️ Риск'}`;
+  const media=pm(r.media);
+  const comms=pm(r.comments);
+  const mediaThumbs=media.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${media.map(m=>{const isV=m.startsWith('data:video');return isV?`<video src="${m}" style="width:100px;height:75px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="openGal('${m}')">`:`<img src="${m}" style="width:100px;height:75px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--bd)" onclick="openGal('${m}')">`}).join('')}</div>`:'' ;
+  document.getElementById('reqMBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Info row -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--bg3);border-radius:10px;padding:12px">
+        <div><div class="lbl" style="margin-bottom:2px">Автор</div><div style="font-size:13px;font-weight:600">${r.anonymous?'🎭 Аноним':r.author||'—'}</div></div>
+        <div><div class="lbl" style="margin-bottom:2px">Участок</div><div style="font-size:13px">${r.location||'—'}</div></div>
+        <div><div class="lbl" style="margin-bottom:2px">Дата подачи</div><div style="font-size:13px">${fdt(r.date||r.created_at)}</div></div>
+      </div>
+      ${r.type==='risk'?(()=>{
+        const evMap={unsafe_conditions:'⚠️ Небезопасные условия',unsafe_behavior:'🚶 Небезопасные действия',near_miss:'💥 Near miss',microtrauma:'🩹 Микротравма'};
+        const urgLabels={1:'🔴 Уровень 1 — ОПАСНО СЕЙЧАС (≤24ч)',2:'🟡 Уровень 2 — МОЖЕТ ПРИВЕСТИ К ТРАВМЕ (≤3 дня)',3:'🟢 Уровень 3 — ЗАМЕЧАНИЕ (≤7 дней)'};
+        const urgBg={1:'rgba(239,68,68,.1)',2:'rgba(245,158,11,.1)',3:'rgba(16,185,129,.1)'};
+        const urgClr={1:'#dc2626',2:'#d97706',3:'#059669'};
+        return `<div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${r.risk_urgency?`<span style="padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;background:${urgBg[r.risk_urgency]};color:${urgClr[r.risk_urgency]}">${urgLabels[r.risk_urgency]||''}</span>`:''}
+          ${r.risk_event_type?`<span style="padding:4px 12px;border-radius:999px;font-size:12px;background:var(--bg3);border:1px solid var(--bd);color:var(--t2)">${evMap[r.risk_event_type]||r.risk_event_type}</span>`:''}
+        </div>`;
+      })():''}
+      <!-- Description -->
+      <div>
+        <div class="lbl">Описание</div>
+        <div style="font-size:14px;color:var(--t1);line-height:1.6;background:var(--bg3);padding:12px;border-radius:10px">${r.description||'—'}</div>
+      </div>
+      <!-- Media -->
+      ${media.length?`<div><div class="lbl">Медиафайлы (${media.length})</div>${mediaThumbs}</div>`:''}
+      <!-- Assignee + Deadline -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="position:relative">
+          <label class="lbl">Ответственный</label>
+          <input class="inp" id="assInput" placeholder="Начните вводить имя…" value="${r.assigned_to||''}" oninput="filterAss()" autocomplete="off">
+          <input type="hidden" id="assVal" value="${r.assigned_to||''}">
+          <div id="assAC" class="aclist" style="display:none"></div>
+        </div>
+        <div>
+          <label class="lbl">Дедлайн</label>
+          <input class="inp" id="dlInput" type="date" value="${r.deadline?r.deadline.slice(0,10):''}">
+        </div>
+      </div>
+      <!-- Status select -->
+      <div>
+        <label class="lbl">Статус заявки</label>
+        <select class="inp" id="stSelect">
+          ${Object.entries(STA).map(([k,v])=>`<option value="${k}" ${r.status===k?'selected':''}>${v.l}</option>`).join('')}
+        </select>
+      </div>
+      <!-- Admin comment -->
+      <div>
+        <label class="lbl">Комментарий администратора</label>
+        <textarea class="inp" id="acText" rows="2" style="resize:none" placeholder="Видит автор заявки…">${r.admin_comment||''}</textarea>
+      </div>
+      <!-- Logs button -->
+      <div>
+        <button class="btn bg" onclick="openLogs(${id})" style="font-size:12px">📋 История изменений ${pm(r.change_log||'[]').length?`(${pm(r.change_log||'[]').length})`:'(пусто)'}</button>
+      </div>
+      <!-- Comments -->
+      <div>
+        <div class="lbl">Комментарии (${comms.length})</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;max-height:220px;overflow-y:auto;padding-right:4px">
+          ${comms.map(c=>`<div style="background:var(--bg3);border-radius:8px;padding:8px 12px"><div style="font-size:11px;font-weight:700;color:var(--t3)">${c.author} · ${fdt(c.date)}</div><div style="font-size:13px;color:var(--t1);margin-top:2px">${c.text}</div></div>`).join('')||'<div style="color:var(--t3);font-size:13px">Нет комментариев</div>'}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="inp" id="newComm" placeholder="Написать комментарий…" style="flex:1">
+          <button class="btn bp" onclick="addAdminComm(${id})">Отправить</button>
+        </div>
+      </div>
+    </div>`;
+  openModal('reqModal');
+}
+
+function filterAss(){
+  const q=document.getElementById('assInput').value.toLowerCase();
+  const ac=document.getElementById('assAC');
+  if(!q){ac.style.display='none';return;}
+  const m=allUsers.filter(u=>u.name.toLowerCase().includes(q)).slice(0,6);
+  if(!m.length){ac.style.display='none';return;}
+  ac.style.display='block';
+  ac.innerHTML=m.map(u=>`<div class="acitem" onclick="selAss('${u.name}')"><div class="av" style="width:24px;height:24px;font-size:8px">${ini(u.name)}</div>${u.name}</div>`).join('');
+}
+function selAss(n){document.getElementById('assInput').value=n;document.getElementById('assVal').value=n;document.getElementById('assAC').style.display='none';}
+
+async function addAdminComm(id){
+  const text=document.getElementById('newComm').value.trim();
+  if(!text||!adminUser)return;
+  const r=allReqs.find(x=>x.id==id);if(!r)return;
+  const comms=pm(r.comments);
+  comms.push({author:adminUser.name,text,date:new Date().toISOString()});
+  r.comments=comms;
+  await SB.from('requests').update({comments:comms}).eq('id',id);
+  document.getElementById('newComm').value='';
+  openReqModal(id);toast('Комментарий добавлен');
+}
+
+async function saveReq(){
+  const r=allReqs.find(x=>x.id==editReqId);if(!r)return;
+  const newSt=document.getElementById('stSelect').value;
+  const ass=document.getElementById('assVal').value||document.getElementById('assInput').value||null;
+  const dl=document.getElementById('dlInput')?.value||null;
+  const ac=document.getElementById('acText').value||null;
+  const prevSt=r.status;
+
+  // Base update — always safe columns
+  const updateData={status:newSt, assigned_to:ass, admin_comment:ac};
+
+  // Try to add deadline and change_log (require migrations.sql)
+  try {
+    const logs=pm(r.change_log||'[]');
+    if(newSt!==r.status)logs.push({who:adminUser.name,action:`Статус: «${STA[r.status]?.l}» → «${STA[newSt]?.l}»`,date:new Date().toISOString()});
+    if(ass!==r.assigned_to)logs.push({who:adminUser.name,action:`Назначен: ${ass||'—'}`,date:new Date().toISOString()});
+    updateData.change_log = logs;
+    if(dl) updateData.deadline = dl;
+  }catch(e){}
+
+  const{error}=await SB.from('requests').update(updateData).eq('id',editReqId);
+  if(error){
+    // Fallback without new columns
+    await SB.from('requests').update({status:newSt,assigned_to:ass,admin_comment:ac}).eq('id',editReqId);
+  }
+
+  Object.assign(r,{...updateData});
+  if(newSt!==prevSt&&r.author_id){
+    await SB.from('notifications').insert({user_id:r.author_id,title:'🔄 Статус изменён',message:`Заявка ${pad(editReqId)}: «${STA[newSt]?.l}»${ac?'\n'+ac:''}`,type:'status_update',post_id:editReqId,read:false,date:new Date().toISOString()}).catch(()=>{});
+  }
+  closeModal('reqModal');filterReqs();renderDash();toast('Заявка сохранена ✅');
+}
+
+function openLogs(id){
+  const r=allReqs.find(x=>x.id==id);if(!r)return;
+  const logs=pm(r.change_log||'[]');
+  document.getElementById('logsMBody').innerHTML=logs.length
+    ?[...logs].reverse().map(l=>`<div class="li"><div class="ld"></div><div><div style="font-size:13px;font-weight:600;color:var(--t1)">${l.action}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${l.who} · ${fdt(l.date)}</div></div></div>`).join('')
+    :'<div style="text-align:center;padding:30px;color:var(--t3)">История изменений пуста</div>';
+  openModal('logsModal');
+}
+
+// ── USERS ──────────────────────────────────────────────────────────
+function filterUsers(){
+  const q=(document.getElementById('uSearch')?.value||'').toLowerCase();
+  const rf=document.getElementById('uRole')?.value||'all';
+  let d=allUsers;
+  if(q)d=d.filter(u=>(u.name||'').toLowerCase().includes(q)||String(u.id).includes(q));
+  if(rf!=='all')d=d.filter(u=>(u.role||'staff')===rf);
+  document.getElementById('uCount').textContent=`(${d.length})`;
+  const tbody=document.getElementById('uTable');tbody.innerHTML='';
+  d.forEach(u=>{
+    const myP=allReqs.filter(r=>r.author_id===u.id||r.author===u.name).length;
+    const rl=ROLES[u.role||'staff']||ROLES.staff;
+    const tr=document.createElement('tr');tr.style.cursor='pointer';tr.onclick=()=>openUserModal(u.id);
+    tr.innerHTML=`<td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="width:28px;height:28px;font-size:10px">${ini(u.name)}</div><div><div style="font-size:13px;font-weight:600">${u.name}</div><div style="font-size:11px;color:var(--t3)">${u.phone||u.email||'—'}</div></div></div></td>
+      <td style="font-family:monospace">${u.id}</td>
+      <td>${u.department||'—'}</td>
+      <td><span class="b ${rl.cls}">${rl.icon} ${rl.label}</span></td>
+      <td><strong style="color:var(--acc)">${u.points||0} ТОП</strong></td>
+      <td style="font-size:12px">${getLvl(u.points||0)}</td>
+      <td>${myP}</td>
+      <td><button class="btn bg bsm" onclick="event.stopPropagation();openUserModal('${u.id}')">✏️ Изменить</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openUserModal(userId){
+  const u=allUsers.find(x=>x.id===userId);if(!u)return;
+  editUserId=userId;
+  document.getElementById('uMTitle').textContent=u.name;
+  const parents=allDepts.filter(d=>!d.parent_id);
+  let dOpts='<option value="">— Не указан —</option>';
+  if(parents.length){parents.forEach(p=>{dOpts+=`<option value="${p.name}" ${u.department===p.name?'selected':''}>${p.name}</option>`;allDepts.filter(d=>d.parent_id===p.id).forEach(c=>{dOpts+=`<option value="${c.name}" ${u.department===c.name?'selected':''}>　└ ${c.name}</option>`;});});}
+  else{allDepts.forEach(d=>{dOpts+=`<option value="${d.name}" ${u.department===d.name?'selected':''}>${d.name}</option>`;});}
+  const rl=ROLES[u.role||'staff']||ROLES.staff;
+  const myPosts=allReqs.filter(r=>r.author_id===u.id||r.author===u.name);
+  document.getElementById('uMBody').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="text-align:center;background:var(--bg3);border-radius:10px;padding:16px">
+        <div class="av" style="width:54px;height:54px;font-size:20px;margin:0 auto 8px">${ini(u.name)}</div>
+        <div style="font-size:15px;font-weight:700">${u.name}</div>
+        <span class="b ${rl.cls}" style="margin-top:4px;display:inline-flex">${rl.icon} ${rl.label}</span>
+        <div style="display:flex;justify-content:center;gap:12px;margin-top:10px">
+          <div style="text-align:center"><div style="font-size:16px;font-weight:800;color:var(--acc)">${u.points||0}</div><div style="font-size:10px;color:var(--t3)">баллов</div></div>
+          <div style="text-align:center"><div style="font-size:16px;font-weight:800">${myPosts.length}</div><div style="font-size:10px;color:var(--t3)">заявок</div></div>
+          <div style="text-align:center"><div style="font-size:16px;font-weight:800">${getLvl(u.points||0).split(' ').slice(1).join(' ')}</div><div style="font-size:10px;color:var(--t3)">уровень</div></div>
+        </div>
+      </div>
+      <div><label class="lbl">Роль</label>
+        <select class="inp" id="uRoleS">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${(u.role||'staff')===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}</select>
+      </div>
+      <div><label class="lbl">Участок</label><select class="inp" id="uDeptS">${dOpts}</select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="lbl">Баллы</label><input class="inp" id="uPointsI" type="number" value="${u.points||0}"></div>
+        <div><label class="lbl">Телефон</label><input class="inp" id="uPhoneI" value="${u.phone||''}"></div>
+      </div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;font-size:12px;color:#92400e">⚠️ Изменения вступают в силу при следующем входе пользователя.</div>
+    </div>`;
+  openModal('userModal');
+}
+
+async function saveUser(){
+  const u=allUsers.find(x=>x.id===editUserId);if(!u)return;
+  const role=document.getElementById('uRoleS').value;
+  const department=document.getElementById('uDeptS').value;
+  const points=parseInt(document.getElementById('uPointsI').value)||0;
+  const phone=document.getElementById('uPhoneI').value;
+  await SB.from('users').update({role,department,points,phone}).eq('id',editUserId);
+  Object.assign(u,{role,department,points,phone});
+  closeModal('userModal');filterUsers();toast('Пользователь обновлён ✅');
+}
+
+// ── DEPARTMENTS ────────────────────────────────────────────────────
+async function loadDepts(){
+  await loadDeptsData();
+  const tree=document.getElementById('deptTree');if(!tree)return;
+  const parents=allDepts.filter(d=>!d.parent_id);
+  if(!parents.length){tree.innerHTML='<div style="color:var(--t3);font-size:13px">Нет участков. Нажмите «+ Добавить участок».</div>';return;}
+  tree.innerHTML=parents.map(p=>{
+    const ch=allDepts.filter(d=>d.parent_id===p.id);
+    return `<div class="dp">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:700">🏭 ${p.name}</div>${p.description?`<div style="font-size:11px;color:var(--t3)">${p.description}</div>`:''}<div style="font-size:11px;color:var(--t3);margin-top:2px">${ch.length} дочерних</div></div>
+        <div style="display:flex;gap:5px"><button class="btn bg bsm" onclick="openDeptModal('${p.id}')">✏️</button><button class="btn bd bsm" onclick="delDept('${p.id}')">🗑️</button><button class="btn bg bsm" onclick="openDeptModal('','${p.id}','${p.name}')">+ дочерний</button></div>
+      </div>
+      ${ch.map(c=>`<div class="dc"><div style="display:flex;align-items:center;gap:6px"><span style="color:var(--t3)">└</span><div><div style="font-size:13px;font-weight:600">${c.name}</div>${c.description?`<div style="font-size:11px;color:var(--t3)">${c.description}</div>`:''}</div></div><div style="display:flex;gap:5px"><button class="btn bg bsm" onclick="openDeptModal('${c.id}')">✏️</button><button class="btn bd bsm" onclick="delDept('${c.id}')">🗑️</button></div></div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function openDeptModal(id='', parentId='', parentName=''){
+  const d=id?allDepts.find(x=>x.id===id):null;
+  document.getElementById('dMTitle').textContent=d?'Редактировать участок':parentId?`Дочерний участок → ${parentName}`:'Новый участок';
+  document.getElementById('dId').value=id;
+  document.getElementById('dName').value=d?.name||'';
+  document.getElementById('dDesc').value=d?.description||'';
+  const parents=allDepts.filter(x=>!x.parent_id&&x.id!==id);
+  document.getElementById('dParent').innerHTML='<option value="">— Корневой (верхний уровень) —</option>'+
+    parents.map(p=>`<option value="${p.id}" ${(d?.parent_id||parentId)===p.id?'selected':''}>${p.name}</option>`).join('');
+  openModal('deptModal');
+}
+async function saveDept(){
+  const id=document.getElementById('dId').value;
+  const rec={name:document.getElementById('dName').value.trim(),description:document.getElementById('dDesc').value.trim()||null,parent_id:document.getElementById('dParent').value||null};
+  if(!rec.name){toast('Введите название','err');return;}
+  if(id){const{error}=await SB.from('departments').update(rec).eq('id',id);if(error){toast('Ошибка: '+error.message,'err');return;}}
+  else{const{error}=await SB.from('departments').insert(rec);if(error){toast('Ошибка: '+error.message,'err');return;}}
+  closeModal('deptModal');await loadDeptsData();loadDepts();toast('Участок сохранён ✅');
+}
+async function delDept(id){
+  const ch=allDepts.filter(d=>d.parent_id===id);
+  if(ch.length&&!confirm(`Удалить участок вместе с ${ch.length} дочерними?`))return;
+  for(const c of ch)await SB.from('departments').delete().eq('id',c.id);
+  await SB.from('departments').delete().eq('id',id);
+  await loadDeptsData();loadDepts();toast('Удалено','info');
+}
+
+// ── ROLES PAGE ─────────────────────────────────────────────────────
+function renderRoles(){
+  const perms={
+    admin:   ['Все права системы','Управление пользователями','Управление заявками','Публикация новостей','Редактирование достижений','Магазин','Настройка ролей'],
+    manager: ['Просмотр всех заявок','Смена статусов','Назначение исполнителей','Установка дедлайнов','Публикация новостей'],
+    engineer:['Создание заявок','Просмотр ленты','Комментарии','Лайки','Реферальная программа'],
+    master:  ['Создание заявок','Просмотр своего участка','Комментарии','Лайки'],
+    staff:   ['Создание заявок','Просмотр ленты','Комментарии','Лайки','Реферальная программа'],
+  };
+  document.getElementById('rolesContent').innerHTML=Object.entries(ROLES).map(([key,r])=>`
+    <div style="border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:14px">
+      <div style="font-size:32px">${r.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="font-size:15px;font-weight:700">${r.label}</div>
+          <span class="b ${r.cls}">${key}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--t3)">${allUsers.filter(u=>(u.role||'staff')===key).length} сотрудников</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          ${(perms[key]||[]).map(p=>`<span style="background:rgba(245,61,45,.08);color:var(--acc);padding:2px 9px;border-radius:999px;font-size:11px">✓ ${p}</span>`).join('')}
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--t3)">* Детальная настройка прав — в следующей версии</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── NEWS ───────────────────────────────────────────────────────────
+async function loadNewsPage(){
+  const{data}=await SB.from('news').select('*').order('date',{ascending:false});
+  const list=document.getElementById('newsList');if(!list)return;
+  const ci={announcement:'📢',achievement:'🏆',safety:'🛡️',general:'📌'};
+  list.innerHTML=(data||[]).map(n=>`<div class="card" style="border-radius:12px"><div style="padding:12px 16px;display:flex;gap:10px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${n.icon||ci[n.category]||'📰'}</div><div style="flex:1"><div style="font-size:13px;font-weight:700">${n.title}</div><div style="font-size:11px;color:var(--t3)">${n.source||'Администрация'} · ${fd(n.date||n.created_at)}</div><div style="font-size:12px;color:var(--t2);margin-top:4px">${(n.content||n.body||'').substring(0,100)}…</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn bg bsm" onclick="editNews(${n.id})">✏️</button><button class="btn bd bsm" onclick="delNews(${n.id})">🗑️</button></div></div></div>`).join('')||'<div style="text-align:center;padding:40px;color:var(--t3)">Новостей пока нет</div>';
+}
+async function editNews(id){const{data}=await SB.from('news').select('*').eq('id',id).single();if(!data)return;document.getElementById('nId').value=id;document.getElementById('nTitle').value=data.title||'';document.getElementById('nContent').value=data.content||data.body||'';document.getElementById('nCat').value=data.category||'general';document.getElementById('nSrc').value=data.source||'';document.getElementById('nMTitle').textContent='Редактировать';openModal('newsModal');}
+function openNewsModal(){document.getElementById('nId').value='';document.getElementById('nTitle').value='';document.getElementById('nContent').value='';document.getElementById('nSrc').value=adminUser?.name||'';document.getElementById('nMTitle').textContent='Новая новость';openModal('newsModal');}
+async function saveNews(){const id=document.getElementById('nId').value;const cat=document.getElementById('nCat').value;const icons={announcement:'📢',achievement:'🏆',safety:'🛡️',general:'📌'};const rec={title:document.getElementById('nTitle').value,content:document.getElementById('nContent').value,source:document.getElementById('nSrc').value||adminUser?.name,category:cat,icon:icons[cat]||'📰',date:new Date().toISOString()};if(id){await SB.from('news').update(rec).eq('id',id);toast('Обновлено');}else{await SB.from('news').insert(rec);toast('Опубликовано ✅');}closeModal('newsModal');loadNewsPage();}
+async function delNews(id){if(!confirm('Удалить?'))return;await SB.from('news').delete().eq('id',id);toast('Удалено','info');loadNewsPage();}
+
+// ── ACHIEVEMENTS ───────────────────────────────────────────────────
+async function loadAchPage(){const{data}=await SB.from('achievements').select('*');const g=document.getElementById('achGrid');if(!g)return;g.innerHTML=(data||[]).map(a=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${a.icon}</div><div style="font-size:13px;font-weight:700">${a.title}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${a.description||a.desc||''}</div><div style="display:flex;justify-content:center;gap:5px;margin-top:7px"><span class="b" style="background:rgba(245,61,45,.1);color:var(--acc)">${a.target_type||''} ≥ ${a.target}</span><span class="b" style="background:rgba(251,191,36,.1);color:#78350f">+${a.points}б</span></div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editAch('${a.id}')">✏️</button><button class="btn bd bsm" onclick="delAch('${a.id}')">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Достижений нет</div>';}
+function openAchModal(){document.getElementById('aId').value='';document.getElementById('aIcon').value='🏆';document.getElementById('aTitle').value='';document.getElementById('aDesc').value='';document.getElementById('aTarget').value='1';document.getElementById('aPoints').value='10';openModal('achModal');}
+async function editAch(id){const{data}=await SB.from('achievements').select('*').eq('id',id).single();if(!data)return;document.getElementById('aId').value=id;document.getElementById('aIcon').value=data.icon||'🏆';document.getElementById('aTitle').value=data.title||'';document.getElementById('aDesc').value=data.description||data.desc||'';document.getElementById('aTType').value=data.target_type||'posts';document.getElementById('aTarget').value=data.target||1;document.getElementById('aPoints').value=data.points||10;openModal('achModal');}
+async function saveAch(){const id=document.getElementById('aId').value;const rec={icon:document.getElementById('aIcon').value,title:document.getElementById('aTitle').value,description:document.getElementById('aDesc').value,target_type:document.getElementById('aTType').value,target:parseInt(document.getElementById('aTarget').value),points:parseInt(document.getElementById('aPoints').value)};let err;if(id){({error:err}=await SB.from('achievements').update(rec).eq('id',id));}else{({error:err}=await SB.from('achievements').insert(rec));}if(err){toast('Ошибка: '+err.message,'err');return;}toast(id?'Обновлено':'Создано ✅');closeModal('achModal');loadAchPage();}
+async function delAch(id){if(!confirm('Удалить?'))return;await SB.from('achievements').delete().eq('id',id);toast('Удалено','info');loadAchPage();}
+
+// ── SHOP ───────────────────────────────────────────────────────────
+async function loadShopPage(){const{data}=await SB.from('shop_items').select('*').order('points');const g=document.getElementById('shopGrid');if(!g)return;g.innerHTML=(data||[]).map(i=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${i.icon}</div><div style="font-size:13px;font-weight:700">${i.title}</div><div style="font-size:15px;font-weight:800;color:var(--acc);margin-top:4px">${i.points} б.</div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editShop(${i.id})">✏️</button><button class="btn bd bsm" onclick="delShop(${i.id})">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Товаров нет</div>';}
+function openShopModal(){document.getElementById('sId').value='';document.getElementById('sIcon').value='🎁';document.getElementById('sTitle').value='';document.getElementById('sPoints').value='100';document.getElementById('sColor').value='';openModal('shopModal');}
+async function editShop(id){const{data}=await SB.from('shop_items').select('*').eq('id',id).single();if(!data)return;document.getElementById('sId').value=id;document.getElementById('sIcon').value=data.icon||'🎁';document.getElementById('sTitle').value=data.title||'';document.getElementById('sPoints').value=data.points||100;document.getElementById('sColor').value=data.color||'';openModal('shopModal');}
+async function saveShopItem(){const id=document.getElementById('sId').value;const rec={icon:document.getElementById('sIcon').value,title:document.getElementById('sTitle').value,points:parseInt(document.getElementById('sPoints').value),color:document.getElementById('sColor').value};if(id){await SB.from('shop_items').update(rec).eq('id',id);toast('Обновлено');}else{await SB.from('shop_items').insert(rec);toast('Добавлено ✅');}closeModal('shopModal');loadShopPage();}
+async function delShop(id){if(!confirm('Удалить?'))return;await SB.from('shop_items').delete().eq('id',id);toast('Удалено','info');loadShopPage();}
+</script>
+</body>
+</html>
