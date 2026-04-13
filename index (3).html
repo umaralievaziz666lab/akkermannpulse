@@ -645,16 +645,15 @@ const twemoji = { parse: () => {} };
 
 // ── SUPABASE ─────────────────────────────────────────────────────────────
 const SB = window.supabase.createClient(
-  'https://slshulewvdanriwvmitu.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsc2h1bGV3dmRhbnJpd3ZtaXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNzExOTQsImV4cCI6MjA4ODk0NzE5NH0.jUsiWjf87pdwMRBsaxt76IeXRKZB7obYoq90yDDDLcc',
+  'https://krrknpunzekogsbtjsll.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtycmtucHVuemVrb2dzYnRqc2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjA3MTAsImV4cCI6MjA5MTYzNjcxMH0.-2TGWk1VE9mVah3uW30Ea-OBlY9yixoSj38nFv6oytA',
   {
     db: { schema: 'public' },
     global: { headers: { 'x-client-info': 'akkermann-pulse' } },
     realtime: { params: { eventsPerSecond: 2 } }
   }
 );
-// BOT TOKEN MOVED TO SERVER-SIDE — never expose in client JS
-const BOT = null; // Use Supabase Edge Function: /functions/v1/send-push
+const BOT = '8716415468:AAFWMaHxGnTzeDw8lI6WplGhW-kAPSs0E54';
 const tg = window.Telegram?.WebApp || null;
 if (tg) {
   try { tg.ready(); } catch(e) {}
