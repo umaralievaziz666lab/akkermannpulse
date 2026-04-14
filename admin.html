@@ -564,7 +564,7 @@ document.getElementById('authForm').addEventListener('submit', async e => {
 // ── SIDEBAR TOGGLE ────────────────────────────────────────────────────────
 function toggleSidebar() {
   document.body.classList.toggle('sidebar-hidden');
-  store.set('sb_hidden', document.body.classList.contains('sidebar-hidden') ? '1' : '0');
+  sbStore.set('sb_hidden', document.body.classList.contains('sidebar-hidden') ? '1' : '0');
 }
 
 // ── ROLE-BASED TAB VISIBILITY ─────────────────────────────────────────────
@@ -783,8 +783,8 @@ function showPage(id){
 }
 
 // ── REFRESH ALL ───────────────────────────────────────────────────
-function store() { return { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k,v) => { try { sessionStorage.setItem(k,v); } catch {} } }; }
-const store = (() => { const s = {}; return { get: k => { try { return sessionStorage.getItem(k); } catch { return s[k]||null; } }, set: (k,v) => { try { sessionStorage.setItem(k,v); } catch { s[k]=v; } } }; })();
+// sidebar state helper (sessionStorage wrapper)
+const sbStore = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k,v) => { try { sessionStorage.setItem(k,v); } catch {} } };
 
 async function refreshAll(){
   document.getElementById('lastUpd').textContent='Обновлено: '+new Date().toLocaleTimeString('ru');
