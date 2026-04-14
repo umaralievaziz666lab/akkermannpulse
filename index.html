@@ -210,7 +210,13 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
  <div id="appScroll">
   <!-- HEADER -->
   <div id="appHeader">
-    <div class="header-title" style="color:#e8e7e3">AKKERMANN PULSE</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px">
+      <div class="header-title" style="color:#e8e7e3;flex:1;text-align:center">AKKERMANN PULSE</div>
+      <button id="bellBtn" onclick="toggleBell()" style="position:relative;background:none;border:none;color:rgba(232,231,227,0.7);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span id="bellBadge" style="display:none;position:absolute;top:0;right:0;min-width:14px;height:14px;background:var(--red);color:#fff;border-radius:999px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 2px;border:1px solid rgba(255,255,255,.3)">0</span>
+      </button>
+    </div>
     <div class="feed-tabs" id="feedTabs">
       <button class="feed-tab active" data-tab="all" onclick="switchTab('all')">Общая лента</button>
       <button class="feed-tab" data-tab="my" onclick="switchTab('my')">Мои заявки</button>
@@ -304,7 +310,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
       </div>
       <!-- Name + trained checkmark (п.9) -->
       <div style="display:flex;align-items:center;justify-content:center;gap:6px">
-        <div style="font-size:19px;font-weight:700;color:var(--t1);line-height:1.2" id="pName" style="color:#e8e7e3">—</div>
+        <div style="font-size:19px;font-weight:700;color:#ffffff;line-height:1.2" id="pName">—</div>
         <div id="trainedBadge" style="display:none;width:20px;height:20px;border-radius:50%;background:#22c55e;display:none;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="11" height="11" fill="none" stroke="#fff" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
         </div>
@@ -545,32 +551,53 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
+<!-- DETAIL MODAL (unified with comments) -->
 <div class="modal-bg" id="detailModal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-height:92vh">
     <div class="modal-head">
-      <span style="font-size:15px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif">ДЕТАЛИ ЗАЯВКИ</span>
+      <span style="font-size:15px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif" id="detailModalTitle">ДЕТАЛИ ЗАЯВКИ</span>
       <button class="modal-close" onclick="closeModal('detailModal')">&times;</button>
     </div>
-    <div class="modal-body" id="detailBody"></div>
-  </div>
-</div>
-
-<!-- COMMENTS MODAL -->
-<div class="modal-bg" id="commentsModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <span style="font-size:15px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif">КОММЕНТАРИИ (<span id="commentCount">0</span>)</span>
-      <button class="modal-close" onclick="closeModal('commentsModal')">&times;</button>
+    <div class="modal-body" id="detailBody" style="padding:0"></div>
+    <!-- Completion report upload (for assigned users) -->
+    <div id="completionReportSection" style="display:none;padding:10px 12px;border-top:1px solid var(--bd);background:rgba(16,185,129,.05)">
+      <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📸 Отчёт о выполнении</div>
+      <input type="file" id="completionMedia" accept="image/*,video/*" multiple style="display:none" onchange="previewCompletionMedia(event)">
+      <div id="completionMediaPrev" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('completionMedia').click()" style="flex:1;padding:9px;border-radius:4px;border:1.5px dashed #059669;background:transparent;color:#059669;font-size:12px;font-weight:700;cursor:pointer">📎 Прикрепить фото/видео</button>
+        <button onclick="submitCompletionReport()" style="flex:1;padding:9px;border-radius:4px;border:none;background:#059669;color:#fff;font-size:12px;font-weight:700;cursor:pointer">✅ Отправить отчёт</button>
+      </div>
     </div>
-    <div id="commentsList" style="flex:1;overflow-y:auto;padding:12px;min-height:80px"></div>
+    <!-- Logs button -->
+    <div id="detailLogsSection" style="display:none;padding:8px 12px;border-top:1px solid var(--bd);background:var(--bg3)">
+      <button id="detailLogsBtn" onclick="showDetailLogs()" style="width:100%;padding:8px;border-radius:4px;border:1px solid var(--bd);background:var(--bg2);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer">📋 История изменений</button>
+    </div>
+    <!-- Comments section -->
+    <div style="border-top:2px solid var(--bd);flex-shrink:0">
+      <div style="padding:8px 12px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em">Комментарии (<span id="commentCount">0</span>)</span>
+      </div>
+      <div id="commentsList" style="max-height:200px;overflow-y:auto;padding:8px 12px;min-height:50px"></div>
+    </div>
     <div style="padding:10px 12px;border-top:1px solid var(--bd);flex-shrink:0">
-      <form id="commentForm" style="display:flex;gap:8px">
+      <form id="commentForm" style="display:flex;gap:8px;position:relative">
         <input type="hidden" id="commentPostId">
-        <input class="inp" id="commentText" placeholder="Ваш комментарий…" style="flex:1;padding:9px 12px">
+        <input class="inp" id="commentText" placeholder="Напишите комментарий… (@имя для упоминания)" style="flex:1;padding:9px 12px">
         <button class="btn-main" type="submit" style="width:auto;padding:9px 16px;font-size:13px;background:var(--red)">↑</button>
       </form>
     </div>
+  </div>
+</div>
+
+<!-- LOGS MODAL -->
+<div class="modal-bg" id="logsModal">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-head">
+      <span style="font-size:14px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif">ИСТОРИЯ ИЗМЕНЕНИЙ</span>
+      <button class="modal-close" onclick="closeModal('logsModal')">&times;</button>
+    </div>
+    <div id="logsBody" style="overflow-y:auto;flex:1;padding:12px;min-height:100px"></div>
   </div>
 </div>
 
@@ -593,7 +620,29 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
             <option value="general">📌 Общее</option>
           </select>
         </div>
-        <button class="btn-main" type="submit" style="background:var(--red)">Опубликовать</button>
+        <div>
+          <label class="lbl">Рассылка (кому)</label>
+          <select class="inp" id="nTarget">
+            <option value="all">📢 Всем сотрудникам</option>
+            <option value="dept">📍 По участку</option>
+            <option value="role">👥 По роли</option>
+          </select>
+        </div>
+        <div id="nTargetDept" style="display:none">
+          <label class="lbl">Выберите участок</label>
+          <select class="inp" id="nTargetDeptVal"><option value="">Загрузка…</option></select>
+        </div>
+        <div id="nTargetRole" style="display:none">
+          <label class="lbl">Выберите роль</label>
+          <select class="inp" id="nTargetRoleVal">
+            <option value="admin">Администраторы</option>
+            <option value="manager">Менеджеры</option>
+            <option value="engineer">Инженеры</option>
+            <option value="master">Мастера</option>
+            <option value="staff">Сотрудники</option>
+          </select>
+        </div>
+        <button class="btn-main" type="submit" style="background:var(--red)">Опубликовать и разослать</button>
       </form>
     </div>
   </div>
@@ -634,6 +683,16 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
 
  </div><!-- /appScroll -->
 </div><!-- /app -->
+
+
+  <!-- NOTIFICATION BELL DROPDOWN -->
+  <div id="bellDropdown" style="display:none;position:fixed;top:0;right:0;width:320px;max-height:480px;background:var(--bg2);border-radius:0 0 0 12px;box-shadow:-4px 4px 20px rgba(0,0,0,.3);z-index:200;overflow:hidden;border-left:1px solid var(--bd);border-bottom:1px solid var(--bd);border-bottom-left-radius:12px;">
+    <div style="background:var(--navy);padding:12px 16px;border-bottom:2px solid var(--red);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em">Уведомления</span>
+      <button onclick="closeBell()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:18px;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div id="bellList" style="overflow-y:auto;max-height:380px;padding:8px"></div>
+  </div>
 
 <!-- GALLERY -->
 <div id="gallery" onclick="closeGallery()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;align-items:center;justify-content:center"></div>
@@ -780,7 +839,7 @@ function renderDaily() {
       <div style="flex:1;min-width:0">
         <div style="display:flex;justify-content:space-between">
           <span style="font-size:13px;font-weight:600;color:var(--t1)">${t.txt}</span>
-          <span style="font-size:12px;font-weight:700;color:var(--acc)">${done?'✅':'+'+t.pts+'б'}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--acc)">${done?'✅':'+'+t.pts+'ТОП'}</span>
         </div>
         <div class="task-bar"><div class="task-fill" style="width:${cur/t.goal*100}%"></div></div>
         <div style="font-size:10px;color:var(--t3);margin-top:3px">${cur} / ${t.goal}</div>
@@ -1217,6 +1276,7 @@ async function sendSelfPush(text) {
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
 async function loadNotifBadge() {
+  updateBellBadge();
   if (!user) return;
   const { count } = await SB.from('notifications').select('*', {count:'exact',head:true}).eq('user_id', user.empId).eq('read', false);
   const badge = document.getElementById('notifBadge');
@@ -1485,28 +1545,185 @@ async function likePost(id) {
 }
 
 // ── DETAIL ────────────────────────────────────────────────────────────────
+// ── CURRENT DETAIL POST ID ────────────────────────────────────────────────
+let currentDetailId = null;
+let completionMediaFiles = [];
+
 function showDetail(id) {
   const p = posts.find(x => x.id == id);
   if (!p) return;
+  currentDetailId = id;
   const STATUS = {new:'🆕 Новая', work:'🔧 В работе', approved:'✅ Принята', rejected:'❌ Отклонена', completed:'🏁 Выполнена'};
+  const stColor = {new:'#f59e0b',work:'#3b82f6',approved:'#10b981',rejected:'#ef4444',completed:'#8b5cf6'};
   const eventTypeMap = {unsafe_conditions:'⚠️ Небезопасные условия',unsafe_behavior:'🚶 Небезопасные действия',near_miss:'💥 Near miss',microtrauma:'🩹 Микротравма'};
   const urgLabels = {1:'🔴 Уровень 1 — ОПАСНО СЕЙЧАС',2:'🟡 Уровень 2 — МОЖЕТ ПРИВЕСТИ К ТРАВМЕ',3:'🟢 Уровень 3 — ЗАМЕЧАНИЕ'};
   const urgColors = {1:'rgba(239,68,68,.1)',2:'rgba(245,158,11,.1)',3:'rgba(16,185,129,.1)'};
   const urgTextColors = {1:'#dc2626',2:'#d97706',3:'#059669'};
-  document.getElementById('detailBody').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:10px">
+
+  // Parse media
+  let media = [];
+  try { media = Array.isArray(p.media) ? p.media : (p.media ? JSON.parse(p.media) : []); } catch(e) { media = []; }
+
+  // Parse completion report media
+  let reportMedia = [];
+  try { reportMedia = Array.isArray(p.completion_media) ? p.completion_media : (p.completion_media ? JSON.parse(p.completion_media) : []); } catch(e) { reportMedia = []; }
+
+  // Parse change_log
+  const logs = (() => { try { return JSON.parse(p.change_log || '[]'); } catch { return []; } })();
+
+  const mediaHtml = media.length ? `
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Медиафайлы (${media.length})</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;${p.type==='risk'?'background:rgba(239,68,68,.1);color:#dc2626':'background:rgba(16,185,129,.1);color:#059669'}">${p.type==='risk'?'⚠️ Риск':'💡 Идея'}</span>
-        <span style="font-size:11px;color:var(--t3)">${STATUS[p.status]||p.status}</span>
-        ${p.risk_urgency ? `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:${urgColors[p.risk_urgency]};color:${urgTextColors[p.risk_urgency]}">${urgLabels[p.risk_urgency]||''}</span>` : ''}
+        ${media.map(m => {
+          const isV = m.startsWith('data:video') || m.includes('.mp4');
+          return isV
+            ? `<video src="${m}" style="width:90px;height:68px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--bd)" onclick="openGallery('${m}')"></video>`
+            : `<img src="${m}" style="width:90px;height:68px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--bd)" onclick="openGallery('${m}')" onerror="this.style.display='none'">`;
+        }).join('')}
       </div>
-      <div style="font-size:11px;font-family:monospace;color:var(--acc)">${pad(p.id)}</div>
-      ${p.risk_event_type ? `<div style="font-size:12px;color:var(--t2);background:var(--bg3);padding:6px 10px;border-radius:8px">${eventTypeMap[p.risk_event_type]||p.risk_event_type}</div>` : ''}
-      <div style="font-size:14px;color:var(--t1);line-height:1.6">${p.description||p.desc||'—'}</div>
-      ${p.admin_comment ? `<div style="background:rgba(102,126,234,.08);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;padding:10px 12px;font-size:13px;color:var(--t2)"><div style="font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;margin-bottom:4px">Комментарий администратора</div>${p.admin_comment}</div>` : ''}
-      <div style="font-size:12px;color:var(--t3);border-top:1px solid var(--bd);padding-top:8px">👤 ${p.author||'—'} &nbsp;·&nbsp; 📍 ${p.location||'—'} &nbsp;·&nbsp; 📅 ${fmtDate(p.date||p.created_at)}</div>
+    </div>` : '';
+
+  const reportMediaHtml = reportMedia.length ? `
+    <div style="margin-bottom:12px;background:rgba(16,185,129,.05);border-radius:8px;padding:10px;border:1px solid rgba(16,185,129,.2)">
+      <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">✅ Отчёт о выполнении (${reportMedia.length})</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${reportMedia.map(m => {
+          const isV = m.startsWith('data:video') || m.includes('.mp4');
+          return isV
+            ? `<video src="${m}" style="width:90px;height:68px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(16,185,129,.3)" onclick="openGallery('${m}')"></video>`
+            : `<img src="${m}" style="width:90px;height:68px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(16,185,129,.3)" onclick="openGallery('${m}')" onerror="this.style.display='none'">`;
+        }).join('')}
+      </div>
+    </div>` : '';
+
+  document.getElementById('detailModalTitle').textContent = `ЗАЯВКА ${pad(p.id)}`;
+  document.getElementById('detailBody').innerHTML = `
+    <div style="padding:14px;display:flex;flex-direction:column;gap:12px">
+      <!-- Status + type badges -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;${p.type==='risk'?'background:rgba(239,68,68,.1);color:#dc2626':'background:rgba(16,185,129,.1);color:#059669'}">${p.type==='risk'?'⚠️ РИСК':'💡 ИДЕЯ'}</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;background:${stColor[p.status]||'#6b7280'}22;color:${stColor[p.status]||'#6b7280'}">${STATUS[p.status]||p.status}</span>
+        ${p.risk_urgency ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;background:${urgColors[p.risk_urgency]};color:${urgTextColors[p.risk_urgency]}">${urgLabels[p.risk_urgency]}</span>` : ''}
+      </div>
+      <!-- Meta row -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding:8px;background:var(--bg3);border-radius:6px">
+        <div><span style="font-size:10px;color:var(--t3);display:block">Автор</span><span style="font-size:12px;font-weight:600;color:var(--t1)">${p.author||'Аноним'}</span></div>
+        <div><span style="font-size:10px;color:var(--t3);display:block">Участок</span><span style="font-size:12px;color:var(--t2)">${p.location||'—'}</span></div>
+        <div><span style="font-size:10px;color:var(--t3);display:block">Дата</span><span style="font-size:12px;color:var(--t2)">${fmtDate(p.date||p.created_at)}</span></div>
+        ${p.assigned_to ? `<div><span style="font-size:10px;color:var(--t3);display:block">Ответственный</span><span style="font-size:12px;font-weight:600;color:var(--acc)">${p.assigned_to}</span></div>` : ''}
+      </div>
+      ${p.risk_event_type ? `<div style="font-size:12px;color:var(--t2);background:var(--bg3);padding:7px 10px;border-radius:6px;border-left:3px solid var(--acc)">${eventTypeMap[p.risk_event_type]||p.risk_event_type}</div>` : ''}
+      <!-- Description -->
+      <div style="font-size:14px;color:var(--t1);line-height:1.7">${p.description||p.desc||'—'}</div>
+      <!-- Media -->
+      ${mediaHtml}
+      ${reportMediaHtml}
+      <!-- Admin comment -->
+      ${p.admin_comment ? `<div style="background:rgba(59,130,246,.08);border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;padding:10px 12px"><div style="font-size:10px;font-weight:700;color:#3b82f6;text-transform:uppercase;margin-bottom:4px">Комментарий администратора</div><div style="font-size:13px;color:var(--t2)">${p.admin_comment}</div></div>` : ''}
     </div>`;
+
+  // Show/hide completion report section for assigned users
+  const isAssigned = user && p.assigned_to === user.name && (p.status === 'work' || p.status === 'new');
+  const crSection = document.getElementById('completionReportSection');
+  if (crSection) crSection.style.display = isAssigned ? 'block' : 'none';
+  completionMediaFiles = [];
+  document.getElementById('completionMediaPrev').innerHTML = '';
+
+  // Show logs button if there are logs or user is admin/manager
+  const logsSection = document.getElementById('detailLogsSection');
+  if (logsSection) {
+    const canSeeLogs = user && ['admin','manager','engineer'].includes(user.role);
+    logsSection.style.display = canSeeLogs ? 'block' : 'none';
+    const logsBtn = document.getElementById('detailLogsBtn');
+    if (logsBtn) logsBtn.textContent = `📋 История изменений ${logs.length ? '('+logs.length+')' : '(пусто)'}`;
+  }
+
+  // Render comments
+  renderCommentsInDetail(p);
+
   openModal('detailModal');
+}
+
+function renderCommentsInDetail(p) {
+  const comms = Array.isArray(p.comments) ? p.comments : (p.comments ? (() => { try { return JSON.parse(p.comments); } catch { return []; } })() : []);
+  document.getElementById('commentPostId').value = p.id;
+  document.getElementById('commentCount').textContent = comms.length;
+  document.getElementById('commentsList').innerHTML = comms.length
+    ? comms.map(c => {
+        const timeStr = c.date ? (() => { const d = new Date(c.date); return d.toLocaleDateString('ru')+' '+d.toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}); })() : '';
+        const isMe = c.author === user?.name;
+        return `<div style="display:flex;gap:8px;margin-bottom:10px;${isMe?'flex-direction:row-reverse':''}">
+          <div class="avatar" style="background:var(--red);width:30px;height:30px;font-size:10px;flex-shrink:0;cursor:pointer" onclick="openUserProfile('','${c.author.replace(/'/g,"\'")}',false)">${initials(c.author)}</div>
+          <div style="max-width:80%;${isMe?'align-items:flex-end;':''}display:flex;flex-direction:column;gap:2px">
+            <div style="font-size:10px;font-weight:700;color:var(--t3);${isMe?'text-align:right':''}">${c.author}${timeStr?' · '+timeStr:''}</div>
+            <div style="font-size:13px;color:var(--t1);background:${isMe?'rgba(245,61,45,.1)':'var(--bg3)'};padding:8px 11px;border-radius:${isMe?'12px 3px 12px 12px':'3px 12px 12px 12px'}">${highlightMentions(sanitize(c.text))}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="text-align:center;padding:16px;color:var(--t3);font-size:13px">Пока нет комментариев</div>';
+}
+
+// Completion report
+function previewCompletionMedia(e) {
+  completionMediaFiles = Array.from(e.target.files).slice(0,5);
+  const prev = document.getElementById('completionMediaPrev');
+  prev.innerHTML = completionMediaFiles.map((f,i) => {
+    const url = URL.createObjectURL(f);
+    const isV = f.type.startsWith('video');
+    return `<div style="position:relative;width:56px;height:56px;border-radius:6px;overflow:hidden;border:1.5px solid #059669">
+      ${isV ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover"></video>` : `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`}
+    </div>`;
+  }).join('');
+}
+
+async function submitCompletionReport() {
+  if (!completionMediaFiles.length) { showToast('Добавьте фото/видео отчёта'); return; }
+  if (!currentDetailId) return;
+  const p = posts.find(x => x.id == currentDetailId);
+  if (!p) return;
+  const btn = document.querySelector('#completionReportSection button:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Отправка…'; }
+  const mediaB64 = await Promise.all(completionMediaFiles.map(f => new Promise(res => {
+    const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f);
+  })));
+  let existing = [];
+  try { existing = Array.isArray(p.completion_media) ? p.completion_media : (p.completion_media ? JSON.parse(p.completion_media) : []); } catch(e) {}
+  const newMedia = [...existing, ...mediaB64];
+  const logs = (() => { try { return JSON.parse(p.change_log || '[]'); } catch { return []; } })();
+  logs.push({who: user.name, action: `Добавлен отчёт о выполнении (${mediaB64.length} файл(ов))`, date: new Date().toISOString()});
+  const { error } = await SB.from('requests').update({completion_media: newMedia, change_log: logs, status: 'completed'}).eq('id', currentDetailId);
+  if (error) {
+    // Fallback without change_log
+    await SB.from('requests').update({completion_media: newMedia, status: 'completed'}).eq('id', currentDetailId);
+  }
+  p.completion_media = newMedia; p.status = 'completed'; p.change_log = JSON.stringify(logs);
+  completionMediaFiles = [];
+  // Notify author
+  if (p.author_id && p.author_id !== user.empId) {
+    await pushNotif(p.author_id, '✅ Заявка выполнена', `${user.name} добавил отчёт о выполнении заявки ${pad(p.id)}`, p.id, 'status_update');
+  }
+  showToast('✅ Отчёт отправлен!');
+  if (btn) { btn.disabled = false; btn.textContent = '✅ Отправить отчёт'; }
+  document.getElementById('completionReportSection').style.display = 'none';
+  showDetail(currentDetailId);
+  renderFeed();
+}
+
+// Logs modal from detail
+function showDetailLogs() {
+  const p = posts.find(x => x.id == currentDetailId);
+  if (!p) return;
+  const logs = (() => { try { return JSON.parse(p.change_log || '[]'); } catch { return []; } })();
+  document.getElementById('logsBody').innerHTML = logs.length
+    ? [...logs].reverse().map(l => `
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg3)">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>
+          <div><div style="font-size:13px;font-weight:600;color:var(--t1)">${sanitize(l.action)}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${sanitize(l.who)} · ${fmtDate(l.date)}</div></div>
+        </div>`).join('')
+    : '<div style="text-align:center;padding:24px;color:var(--t3)">История пуста</div>';
+  openModal('logsModal');
 }
 
 // ── COMMENTS ──────────────────────────────────────────────────────────────
@@ -1596,7 +1813,8 @@ document.getElementById('commentForm').addEventListener('submit', async e => {
   p.comments = comms;
   await SB.from('requests').update({comments: comms}).eq('id', id);
   document.getElementById('commentText').value = '';
-  showComments(id);
+  // Re-render comments inside detail modal
+  renderCommentsInDetail(p);
   renderFeed();
   bumpTask('comm');
   // Уведомление автору поста
@@ -1611,6 +1829,8 @@ document.getElementById('commentForm').addEventListener('submit', async e => {
       await pushNotif(mentioned.id, '👋 Вас упомянули', `${user.name} упомянул вас в заявке ${pad(p.id)}: «${text.substring(0,60)}»`, p.id, 'comment');
     }
   }
+  // Update bell badge
+  loadNotifBadge();
 });
 
 // ── CREATE POST ───────────────────────────────────────────────────────────
@@ -1738,15 +1958,58 @@ async function loadNews() {
 
 document.getElementById('newsForm').addEventListener('submit', async e => {
   e.preventDefault();
-  if (!user || user.role !== 'admin') return;
+  if (!user || !['admin','manager'].includes(user.role)) return;
   const cat = document.getElementById('nCat').value;
   const icons = {announcement:'📢', achievement:'🏆', safety:'🛡️', general:'📌'};
-  await SB.from('news').insert({
-    title: document.getElementById('nTitle').value,
-    content: document.getElementById('nContent').value,
-    source: user.name, icon: icons[cat]||'📰', color: '', date: new Date().toISOString()
-  });
-  closeModal('newsModal'); e.target.reset(); loadNews();
+  const target = document.getElementById('nTarget')?.value || 'all';
+  const targetDept = document.getElementById('nTargetDeptVal')?.value || '';
+  const targetRole = document.getElementById('nTargetRoleVal')?.value || '';
+  const title = document.getElementById('nTitle').value;
+  const content_text = document.getElementById('nContent').value;
+  const rec = {
+    title, content: content_text,
+    source: user.name, icon: icons[cat]||'📰',
+    category: cat, color: '', date: new Date().toISOString(),
+    target_type: target, target_value: target==='dept'?targetDept:(target==='role'?targetRole:'all')
+  };
+  const { data: news, error } = await SB.from('news').insert(rec).select().single();
+  if (error) { await SB.from('news').insert({title, content: content_text, source: user.name, icon: icons[cat]||'📰', category: cat, date: new Date().toISOString()}); }
+  // Send notifications to target users
+  try {
+    let targetUsers = [];
+    if (target === 'all') {
+      const { data } = await SB.from('users').select('id').neq('id', user.empId);
+      targetUsers = data || [];
+    } else if (target === 'dept' && targetDept) {
+      const { data } = await SB.from('users').select('id').eq('department', targetDept).neq('id', user.empId);
+      targetUsers = data || [];
+    } else if (target === 'role' && targetRole) {
+      const { data } = await SB.from('users').select('id').eq('role', targetRole).neq('id', user.empId);
+      targetUsers = data || [];
+    }
+    for (const u of targetUsers) {
+      await pushNotif(u.id, `📰 ${icons[cat]} ${title}`, content_text.substring(0,120), null, 'news');
+    }
+    showToast(`✅ Новость опубликована (${targetUsers.length} уведомлений отправлено)`);
+  } catch(ex) { console.warn('news notif error:', ex); showToast('Опубликовано'); }
+  closeModal('newsModal'); e.target.reset();
+  document.getElementById('nTargetDept').style.display = 'none';
+  document.getElementById('nTargetRole').style.display = 'none';
+  loadNews();
+});
+
+// News target toggle
+document.getElementById('nTarget')?.addEventListener('change', e => {
+  const v = e.target.value;
+  const deptEl = document.getElementById('nTargetDept');
+  const roleEl = document.getElementById('nTargetRole');
+  if (deptEl) deptEl.style.display = v === 'dept' ? 'block' : 'none';
+  if (roleEl) roleEl.style.display = v === 'role' ? 'block' : 'none';
+  // Populate dept dropdown
+  if (v === 'dept') {
+    const sel = document.getElementById('nTargetDeptVal');
+    if (sel) sel.innerHTML = buildDeptOptions('', null);
+  }
 });
 
 // ── LEADERBOARD ───────────────────────────────────────────────────────────
@@ -1779,7 +2042,7 @@ async function renderLb() {
         <div style="font-size:13px;font-weight:700;color:${isMe?'var(--acc)':'var(--t1)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${u.name}${isMe?' (вы)':''}</div>
         <div style="font-size:11px;color:var(--t3)">${DEPT_MAP[u.department]||u.department||'—'}</div>
       </div>
-      <div style="font-size:14px;font-weight:700;color:var(--acc);flex-shrink:0">${u.points||0} б.</div>
+      <div style="font-size:14px;font-weight:700;color:var(--acc);flex-shrink:0">${u.points||0} ТОП</div>
     </div>`;
   }).join('') + myRow;
 }
@@ -1940,6 +2203,9 @@ async function launchApp(u) {
   setupSwipe();
   setupInfiniteScroll();
   setTimeout(setupMentionAutocomplete, 500);
+  setTimeout(checkAchievements, 3000);
+  setupRealtimeNotifs();
+  updateBellBadge();
   // Realtime — only subscribe once
   if (!window._rtSubscribed) {
     window._rtSubscribed = true;
@@ -2084,6 +2350,153 @@ document.addEventListener('submit', e => {
     alert('❌ Неправильные ответы, попробуйте ещё раз');
   }
 });
+
+
+// ── BELL DROPDOWN ─────────────────────────────────────────────────────────
+let bellOpen = false;
+
+function toggleBell() {
+  bellOpen = !bellOpen;
+  const dd = document.getElementById('bellDropdown');
+  if (!dd) return;
+  if (bellOpen) {
+    dd.style.display = 'block';
+    loadBellNotifs();
+    document.addEventListener('click', closeBellOutside, {once:true, capture:true});
+  } else {
+    dd.style.display = 'none';
+  }
+}
+
+function closeBell() {
+  bellOpen = false;
+  const dd = document.getElementById('bellDropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function closeBellOutside(e) {
+  if (!document.getElementById('bellDropdown')?.contains(e.target) && e.target.id !== 'bellBtn') {
+    closeBell();
+  }
+}
+
+async function loadBellNotifs() {
+  if (!user) return;
+  const list = document.getElementById('bellList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px">Загрузка…</div>';
+  try {
+    const { data } = await SB.from('notifications')
+      .select('*')
+      .eq('user_id', user.empId)
+      .order('date', {ascending:false})
+      .limit(15);
+    if (!data?.length) {
+      list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--t3);font-size:12px">🔔 Нет уведомлений</div>';
+      return;
+    }
+    const icons = {welcome:'👋', new_request:'📋', status_update:'🔄', info:'ℹ️', achievement:'🏅', comment:'💬', news:'📰'};
+    list.innerHTML = data.map(n => `
+      <div onclick="onBellClick('${n.id}','${n.post_id||''}','${n.type||'info'}')" style="padding:10px 12px;cursor:pointer;border-radius:4px;margin-bottom:4px;background:${n.read?'transparent':'rgba(245,61,45,.06)'};border-left:${n.read?'2px solid transparent':'2px solid var(--red)'};transition:.15s" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background='${n.read?'transparent':'rgba(245,61,45,.06)'}'">
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <span style="font-size:16px;flex-shrink:0">${icons[n.type]||'🔔'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;color:var(--t1)">${n.title||''}</div>
+            <div style="font-size:11px;color:var(--t2);margin-top:2px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${n.message||''}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:3px">${n.date?new Date(n.date).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</div>
+          </div>
+        </div>
+      </div>`).join('');
+    // Mark all as read in background
+    SB.from('notifications').update({read:true}).eq('user_id', user.empId).eq('read', false).then(() => {
+      loadNotifBadge();
+    });
+  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px">Ошибка загрузки</div>'; }
+}
+
+async function onBellClick(notifId, postId, type) {
+  closeBell();
+  if (postId && postId !== 'null' && postId !== '') {
+    const p = posts.find(x => String(x.id) === String(postId));
+    if (p) { showDetail(p.id); return; }
+    // Try loading from DB
+    try {
+      const { data } = await SB.from('requests').select('*').eq('id', postId).single();
+      if (data) { posts.unshift(data); showDetail(data.id); }
+    } catch(e) {}
+  } else {
+    showSec('notif');
+  }
+}
+
+// ── ACHIEVEMENT NOTIFICATIONS ─────────────────────────────────────────────
+async function checkAchievements() {
+  if (!user) return;
+  try {
+    const { data: allAch } = await SB.from('achievements').select('*');
+    if (!allAch?.length) return;
+    const completed = user.completedAchievements || [];
+    const myPosts = posts.filter(p => p.author_id === user.empId || p.author === user.name);
+    const myLikes = myPosts.reduce((s, p) => s + (p.likes || 0), 0);
+    for (const ach of allAch) {
+      if (completed.includes(ach.id)) continue;
+      let earned = false;
+      const target = ach.target || 1;
+      if (ach.target_type === 'posts' && myPosts.length >= target) earned = true;
+      if (ach.target_type === 'ideas' && myPosts.filter(p=>p.type==='idea').length >= target) earned = true;
+      if (ach.target_type === 'risks' && myPosts.filter(p=>p.type==='risk').length >= target) earned = true;
+      if (ach.target_type === 'likes' && myLikes >= target) earned = true;
+      if (ach.target_type === 'points' && user.points >= target) earned = true;
+      if (earned) {
+        completed.push(ach.id);
+        user.completedAchievements = completed;
+        user.points += (ach.points || 0);
+        await SB.from('users').update({
+          points: user.points,
+          completed_achievements: completed
+        }).eq('id', user.empId);
+        store.set('u', JSON.stringify(user));
+        updateProfileUI();
+        await pushNotif(user.empId, `🏅 Новое достижение!`, `«${ach.icon||''} ${ach.title}» — +${ach.points||0} ТОП`, null, 'achievement');
+        showAchBadge();
+        showToast(`🏅 Достижение: ${ach.title}! +${ach.points||0} ТОП`);
+      }
+    }
+  } catch(e) { console.warn('checkAch error:', e); }
+}
+
+// ── STATUS CHANGE NOTIFICATIONS (realtime) ───────────────────────────────
+function setupRealtimeNotifs() {
+  if (window._realtimeNotifSetup) return;
+  window._realtimeNotifSetup = true;
+  SB.channel('rt-notifs')
+    .on('postgres_changes', {event:'INSERT', schema:'public', table:'notifications', filter:`user_id=eq.${user?.empId}`}, p => {
+      loadNotifBadge();
+      updateBellBadge();
+    })
+    .subscribe();
+}
+
+async function updateBellBadge() {
+  if (!user) return;
+  const { count } = await SB.from('notifications').select('*',{count:'exact',head:true}).eq('user_id', user.empId).eq('read', false);
+  const badge = document.getElementById('bellBadge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.style.display = 'flex'; badge.textContent = count > 9 ? '9+' : count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── TELEGRAM NOTIFICATION HELPER ─────────────────────────────────────────
+/*
+  Для работы Telegram-уведомлений нужна Supabase Edge Function.
+  Инструкция по настройке - см. SQL_INSTRUCTIONS.md
+  BOT_TOKEN уже задан в константе BOT выше.
+  Функция pushNotif записывает в таблицу notifications.
+  Edge Function слушает INSERT в notifications и шлёт в Telegram.
+*/
 
 // Start
 init();
