@@ -186,6 +186,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
       <button class="ni" onclick="showPage('news')" data-page="news"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>Новости</button>
       <button class="ni" onclick="showPage('achievements')" data-page="achievements"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></span>Достижения</button>
       <button class="ni" onclick="showPage('shop')" data-page="shop"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>Магазин</button>
+      <button class="ni" onclick="showPage('groups')" data-page="groups"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>Группы</button>
     </nav>
     <div class="sb-btm">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;background:rgba(255,255,255,0.08)">
@@ -267,23 +268,24 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
       <!-- REQUESTS -->
       <div class="page" id="page-requests">
         <div class="fr">
-          <div class="sb"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input id="rqSearch" placeholder="Поиск…" oninput="filterReqs()"></div>
-          <select class="inp" style="width:130px" id="rqSt" onchange="filterReqs()">
+          <div class="sb"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg><input id="rqSearch" placeholder="Поиск…" oninput="filterReqs(true)"></div>
+          <select class="inp" style="width:130px" id="rqSt" onchange="filterReqs(true)">
             <option value="all">Все статусы</option><option value="new">Новые</option><option value="work">В работе</option><option value="approved">Принято</option><option value="rejected">Отклонено</option><option value="completed">Выполнено</option>
           </select>
-          <select class="inp" style="width:110px" id="rqTp" onchange="filterReqs()">
+          <select class="inp" style="width:110px" id="rqTp" onchange="filterReqs(true)">
             <option value="all">Все типы</option><option value="idea">💡 Идеи</option><option value="risk">⚠️ Риски</option>
           </select>
-          <select class="inp" style="width:130px" id="rqUrg" onchange="filterReqs()">
+          <select class="inp" style="width:130px" id="rqUrg" onchange="filterReqs(true)">
             <option value="all">Все уровни</option><option value="1">🔴 Уровень 1</option><option value="2">🟡 Уровень 2</option><option value="3">🟢 Уровень 3</option>
           </select>
-          <select class="inp" style="width:140px" id="rqLoc" onchange="filterReqs()">
+          <select class="inp" style="width:140px" id="rqLoc" onchange="filterReqs(true)">
             <option value="all">Все участки</option>
           </select>
         </div>
         <div class="card">
           <div class="ch"><div class="ct2">Заявки <span id="rqCount" style="font-weight:400;color:var(--t3)"></span></div></div>
           <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Срочность</th><th>Автор</th><th>Участок</th><th>Медиа</th><th>Описание</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th></tr></thead><tbody id="rqTable"></tbody></table></div>
+          <div id="rqPager" style="display:none;justify-content:center;align-items:center;gap:10px;padding:14px"><button class="btn bg bsm" id="rqPrevBtn" onclick="reqPage--;filterReqs()">← Назад</button><span id="rqPageInfo" style="font-size:12px;color:var(--t3)"></span><button class="btn bg bsm" id="rqNextBtn" onclick="reqPage++;filterReqs()">Вперёд →</button></div>
         </div>
       </div>
 
@@ -297,7 +299,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
         </div>
         <div class="card">
           <div class="ch"><div class="ct2">Пользователи <span id="uCount" style="font-weight:400;color:var(--t3)"></span></div></div>
-          <table><thead><tr><th>Сотрудник</th><th>Табельный</th><th>Участок</th><th>Роль</th><th>Баллы</th><th>Уровень</th><th>Заявок</th><th></th></tr></thead><tbody id="uTable"></tbody></table>
+          <table><thead><tr><th>Сотрудник</th><th>Табельный</th><th>Участок</th><th>Роль</th><th>ТОП</th><th>Уровень</th><th>Заявок</th><th></th></tr></thead><tbody id="uTable"></tbody></table>
         </div>
       </div>
 
@@ -310,6 +312,12 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
             ⚙️ <strong>Как работает иерархия:</strong> Корневой участок — это цех или подразделение (например «Цех 1»). Дочерний — конкретное рабочее место внутри него (например «Сверлильный станок»). При выборе участка в мобильном приложении пользователи видят оба уровня.
           </div>
         </div>
+      </div>
+
+      <!-- GROUPS -->
+      <div class="page" id="page-groups">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn bp" onclick="openGroupModal()">+ Создать группу</button></div>
+        <div id="groupsList" style="display:flex;flex-direction:column;gap:10px"></div>
       </div>
 
       <!-- ROLES -->
@@ -348,6 +356,29 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
   </div>
 </div>
 
+<!-- GROUP MODAL -->
+<div class="mbg" id="groupModal">
+  <div class="mbox sm">
+    <div class="mh"><span style="font-size:14px;font-weight:700" id="grpMTitle">Группа</span><button class="mc" onclick="closeModal('groupModal')">&times;</button></div>
+    <div class="mb">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <input type="hidden" id="grpId">
+        <div><label class="lbl">Название группы</label><input class="inp" id="grpName" placeholder="Например: Мастера смены А"></div>
+        <div><label class="lbl">Описание</label><input class="inp" id="grpDesc" placeholder="Описание группы"></div>
+        <div>
+          <label class="lbl">Участники</label>
+          <div style="position:relative;margin-bottom:6px">
+            <input class="inp" id="grpMemberInput" placeholder="Добавить участника по имени…" oninput="filterGrpMember()" autocomplete="off">
+            <div id="grpMemberAC" class="aclist" style="display:none"></div>
+          </div>
+          <div id="grpMembersList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:32px;padding:6px;background:var(--bg3);border-radius:4px;border:1px solid var(--bd)"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bg" onclick="closeModal('groupModal')">Отмена</button><button class="btn bp" onclick="saveGroup()">Сохранить</button></div>
+  </div>
+</div>
+
 <!-- LOGS MODAL -->
 <div class="mbg" id="logsModal">
   <div class="mbox sm">
@@ -375,6 +406,12 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
         <div><label class="lbl">Название участка</label><input class="inp" id="dName" placeholder="Например: Цех 1 или Сверлильный станок"></div>
         <div><label class="lbl">Родительский участок (если дочерний)</label><select class="inp" id="dParent"><option value="">— Корневой (верхний уровень) —</option></select></div>
         <div><label class="lbl">Описание (необязательно)</label><input class="inp" id="dDesc" placeholder="Краткое описание"></div>
+        <div style="position:relative">
+          <label class="lbl">Ответственный за участок</label>
+          <input class="inp" id="dResp" placeholder="Начните вводить имя…" oninput="filterDeptResp()" autocomplete="off">
+          <input type="hidden" id="dRespVal">
+          <div id="dRespAC" class="aclist" style="display:none"></div>
+        </div>
       </div>
     </div>
     <div class="mf"><button class="btn bg" onclick="closeModal('deptModal')">Отмена</button><button class="btn bp" onclick="saveDept()">Сохранить</button></div>
@@ -399,9 +436,11 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
             <option value="all">📢 Всем сотрудникам</option>
             <option value="dept">📍 По участку</option>
             <option value="role">👥 По роли</option>
+            <option value="group">🏷️ По группе</option>
           </select>
         </div>
         <div id="nTargetDeptRow" style="display:none"><label class="lbl">Участок</label><select class="inp" id="nTargetDept"></select></div>
+        <div id="nTargetGroupRow" style="display:none"><label class="lbl">Группа</label><select class="inp" id="nTargetGroup"></select></div>
         <div id="nTargetRoleRow" style="display:none"><label class="lbl">Роль</label><select class="inp" id="nTargetRole"><option value="admin">Администраторы</option><option value="manager">Менеджеры</option><option value="engineer">Инженеры</option><option value="master">Мастера</option><option value="staff">Сотрудники</option></select></div>
       </div>
     </div>
@@ -422,9 +461,9 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
         </div>
         <div><label class="lbl">Описание</label><input class="inp" id="aDesc"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div><label class="lbl">Тип цели</label><select class="inp" id="aTType"><option value="posts">Заявок</option><option value="ideas">Идей</option><option value="risks">Рисков</option><option value="likes">Лайков</option><option value="points">Баллов</option><option value="manual">Вручную</option></select></div>
+          <div><label class="lbl">Тип цели</label><select class="inp" id="aTType"><option value="posts">Заявок</option><option value="ideas">Идей</option><option value="risks">Рисков</option><option value="likes">Лайков</option><option value="points">ТОП</option><option value="manual">Вручную</option></select></div>
           <div><label class="lbl">Цель</label><input class="inp" id="aTarget" type="number" min="1" value="1"></div>
-          <div><label class="lbl">Баллы</label><input class="inp" id="aPoints" type="number" min="1" value="10"></div>
+          <div><label class="lbl">ТОП</label><input class="inp" id="aPoints" type="number" min="1" value="10"></div>
         </div>
       </div>
     </div>
@@ -444,7 +483,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
           <div><label class="lbl">Название</label><input class="inp" id="sTitle" required></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div><label class="lbl">Баллы</label><input class="inp" id="sPoints" type="number" min="1" value="100"></div>
+          <div><label class="lbl">ТОП</label><input class="inp" id="sPoints" type="number" min="1" value="100"></div>
           <div><label class="lbl">Цвет (необяз.)</label><input class="inp" id="sColor"></div>
         </div>
       </div>
@@ -497,6 +536,7 @@ function adminRateCheck(key, maxPerMin=10) {
 
 // ── GLOBALS ─────────────────────────────────────────────────────
 let adminUser=null, allReqs=[], allUsers=[], allDepts=[];
+let reqPage=1; const REQ_PAGE_SIZE=20;
 let editReqId=null, editUserId=null;
 let charts={};
 
@@ -568,7 +608,7 @@ function toggleSidebar() {
 }
 
 // ── ROLE-BASED TAB VISIBILITY ─────────────────────────────────────────────
-const ADMIN_ONLY_PAGES = ['users','departments','roles','achievements','shop'];
+const ADMIN_ONLY_PAGES = ['users','departments','roles','achievements','shop','groups'];
 
 function applyRoleVisibility() {
   if (!adminUser) return;
@@ -709,14 +749,16 @@ function exportToExcel() {
 // ── NEWS BROADCAST ────────────────────────────────────────────────────────
 function toggleNewsTarget() {
   const v = document.getElementById('nTarget')?.value;
-  const dRow = document.getElementById('nTargetDeptRow');
-  const rRow = document.getElementById('nTargetRoleRow');
-  if (dRow) dRow.style.display = v === 'dept' ? 'block' : 'none';
-  if (rRow) rRow.style.display = v === 'role' ? 'block' : 'none';
-  // Populate dept options
+  document.getElementById('nTargetDeptRow').style.display  = v==='dept'  ? 'block' : 'none';
+  document.getElementById('nTargetRoleRow').style.display  = v==='role'  ? 'block' : 'none';
+  document.getElementById('nTargetGroupRow').style.display = v==='group' ? 'block' : 'none';
   if (v === 'dept') {
     const sel = document.getElementById('nTargetDept');
     if (sel) sel.innerHTML = allDepts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+  }
+  if (v === 'group') {
+    const sel = document.getElementById('nTargetGroup');
+    if (sel) sel.innerHTML = allGroups.map(g => `<option value="${JSON.stringify(Array.isArray(g.members)?g.members:JSON.parse(g.members||'[]'))}">${g.name}</option>`).join('');
   }
 }
 
@@ -743,6 +785,15 @@ async function saveNews() {
     } else if (target === 'role' && targetRole) {
       const { data } = await SB.from('users').select('id').eq('role', targetRole).neq('id', adminUser?.id);
       targetUsers = data || [];
+    } else if (target === 'group') {
+      const selGroup = document.getElementById('nTargetGroup');
+      if (selGroup?.value) {
+        try {
+          const memberNames = JSON.parse(selGroup.value);
+          const { data } = await SB.from('users').select('id').in('name', memberNames).neq('id', adminUser?.id);
+          targetUsers = data || [];
+        } catch(ex) {}
+      }
     }
     let sent = 0;
     for (const u of targetUsers) {
@@ -756,6 +807,150 @@ async function saveNews() {
     }
     if (sent > 0) toast(`✅ Разослано ${sent} уведомлений`);
   } catch(ex) { console.warn('news broadcast error:', ex); }
+}
+
+
+// ── GROUPS MANAGEMENT ─────────────────────────────────────────────────────
+let allGroups = [];
+let currentGroupMembers = [];
+
+async function loadGroups() {
+  try {
+    const { data } = await SB.from('groups').select('*').order('name');
+    allGroups = data || [];
+  } catch(e) {
+    // Table may not exist yet
+    allGroups = JSON.parse(localStorage.getItem('pulse_groups') || '[]');
+  }
+  renderGroups();
+}
+
+function renderGroups() {
+  const el = document.getElementById('groupsList');
+  if (!el) return;
+  if (!allGroups.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3)">Групп пока нет. Создайте первую группу.</div>';
+    return;
+  }
+  el.innerHTML = allGroups.map(g => {
+    const members = Array.isArray(g.members) ? g.members : (g.members ? JSON.parse(g.members) : []);
+    return `<div class="card" style="padding:14px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:var(--t1)">👥 ${g.name}</div>
+          ${g.description ? `<div style="font-size:12px;color:var(--t3);margin-top:2px">${g.description}</div>` : ''}
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+            ${members.map(m => `<span style="background:var(--bg3);border:1px solid var(--bd);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;color:var(--t2)">${m}</span>`).join('')}
+            ${!members.length ? '<span style="font-size:11px;color:var(--t3)">Нет участников</span>' : ''}
+          </div>
+          <div style="font-size:11px;color:var(--t3);margin-top:6px">${members.length} участников</div>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0">
+          <button class="btn bg bsm" onclick="editGroup('${g.id}')">✏️</button>
+          <button class="btn bd bsm" onclick="deleteGroup('${g.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openGroupModal() {
+  currentGroupMembers = [];
+  document.getElementById('grpId').value = '';
+  document.getElementById('grpName').value = '';
+  document.getElementById('grpDesc').value = '';
+  document.getElementById('grpMemberInput').value = '';
+  renderGroupMembers();
+  document.getElementById('grpMTitle').textContent = 'Новая группа';
+  openModal('groupModal');
+}
+
+function editGroup(id) {
+  const g = allGroups.find(x => x.id == id);
+  if (!g) return;
+  currentGroupMembers = Array.isArray(g.members) ? [...g.members] : (g.members ? JSON.parse(g.members) : []);
+  document.getElementById('grpId').value = id;
+  document.getElementById('grpName').value = g.name || '';
+  document.getElementById('grpDesc').value = g.description || '';
+  document.getElementById('grpMemberInput').value = '';
+  renderGroupMembers();
+  document.getElementById('grpMTitle').textContent = 'Редактировать группу';
+  openModal('groupModal');
+}
+
+function filterGrpMember() {
+  const q = document.getElementById('grpMemberInput').value.toLowerCase();
+  const ac = document.getElementById('grpMemberAC');
+  if (!q) { ac.style.display='none'; return; }
+  const m = allUsers.filter(u => u.name.toLowerCase().includes(q) && !currentGroupMembers.includes(u.name)).slice(0,6);
+  if (!m.length) { ac.style.display='none'; return; }
+  ac.style.display = 'block';
+  ac.innerHTML = m.map(u => `<div class="acitem" onclick="addGroupMember('${u.name.replace(/'/g,"\'")}')"><div class="av" style="width:24px;height:24px;font-size:8px">${ini(u.name)}</div>${u.name}</div>`).join('');
+}
+
+function addGroupMember(name) {
+  if (!currentGroupMembers.includes(name)) currentGroupMembers.push(name);
+  document.getElementById('grpMemberInput').value = '';
+  document.getElementById('grpMemberAC').style.display = 'none';
+  renderGroupMembers();
+}
+
+function removeGroupMember(name) {
+  currentGroupMembers = currentGroupMembers.filter(m => m !== name);
+  renderGroupMembers();
+}
+
+function renderGroupMembers() {
+  const el = document.getElementById('grpMembersList');
+  if (!el) return;
+  el.innerHTML = currentGroupMembers.map(m =>
+    `<span style="background:rgba(245,61,45,.1);border:1px solid rgba(245,61,45,.3);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--acc);display:flex;align-items:center;gap:4px">
+      ${m} <button onclick="removeGroupMember('${m.replace(/'/g,"\'")}');event.stopPropagation()" style="background:none;border:none;color:var(--acc);cursor:pointer;font-size:13px;line-height:1;padding:0">&times;</button>
+    </span>`).join('');
+}
+
+async function saveGroup() {
+  const name = document.getElementById('grpName').value.trim();
+  if (!name) { toast('Введите название группы', 'err'); return; }
+  const id = document.getElementById('grpId').value;
+  const rec = {
+    name,
+    description: document.getElementById('grpDesc').value.trim() || null,
+    members: currentGroupMembers
+  };
+  try {
+    if (id) {
+      const { error } = await SB.from('groups').update(rec).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await SB.from('groups').insert(rec);
+      if (error) throw error;
+    }
+  } catch(e) {
+    // Fallback: store in localStorage if table doesn't exist
+    if (id) {
+      const i = allGroups.findIndex(g => g.id == id);
+      if (i >= 0) allGroups[i] = {...allGroups[i], ...rec};
+    } else {
+      allGroups.push({id: Date.now().toString(), ...rec});
+    }
+    localStorage.setItem('pulse_groups', JSON.stringify(allGroups));
+  }
+  closeModal('groupModal');
+  await loadGroups();
+  toast('Группа сохранена ✅');
+}
+
+async function deleteGroup(id) {
+  if (!confirm('Удалить группу?')) return;
+  try {
+    await SB.from('groups').delete().eq('id', id);
+  } catch(e) {
+    allGroups = allGroups.filter(g => g.id != id);
+    localStorage.setItem('pulse_groups', JSON.stringify(allGroups));
+  }
+  await loadGroups();
+  toast('Удалено', 'info');
 }
 
 function adminLogout(){if(!confirm('Выйти?'))return;clearSession();document.getElementById('adminApp').style.display='none';document.getElementById('authScreen').style.display='flex';adminUser=null;}
@@ -779,6 +974,7 @@ function showPage(id){
   if(id==='achievements'){ loadAchPage(); }
   if(id==='shop')     { loadShopPage(); }
   if(id==='departments'){ loadDepts(); }
+  if(id==='groups'){ loadGroups(); }
   if(id==='roles')    { renderRoles(); }
 }
 
@@ -882,7 +1078,7 @@ function mkReqRow(r){
 }
 
 // ── REQUESTS TABLE ─────────────────────────────────────────────────
-function filterReqs(){
+function filterReqs(reset=false){ if(reset) reqPage=1;
   try {
     const q=(document.getElementById('rqSearch')?.value||'').toLowerCase();
     const st=document.getElementById('rqSt')?.value||'all';
@@ -902,9 +1098,21 @@ function filterReqs(){
     tbody.innerHTML='';
     if(!d.length){
       tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--t3)">Нет заявок</td></tr>`;
+      document.getElementById('rqPager')?.style && (document.getElementById('rqPager').style.display='none');
       return;
     }
-    d.forEach(r=>{
+    // Pagination
+    const totalPages = Math.ceil(d.length / REQ_PAGE_SIZE);
+    if(reqPage > totalPages) reqPage = totalPages;
+    const paged = d.slice((reqPage-1)*REQ_PAGE_SIZE, reqPage*REQ_PAGE_SIZE);
+    const pagerEl = document.getElementById('rqPager');
+    if(pagerEl) {
+      pagerEl.style.display = totalPages > 1 ? 'flex' : 'none';
+      document.getElementById('rqPageInfo').textContent = `Стр. ${reqPage} из ${totalPages} (${d.length} заявок)`;
+      document.getElementById('rqPrevBtn').disabled = reqPage <= 1;
+      document.getElementById('rqNextBtn').disabled = reqPage >= totalPages;
+    }
+    paged.forEach(r=>{
       try{
         const st2=STA[r.status]||STA.new;
         let media=[];
@@ -969,6 +1177,27 @@ function openReqModal(id){
       </div>
       <!-- Media -->
       ${media.length?`<div><div class="lbl">Медиафайлы (${media.length})</div>${mediaThumbs}</div>`:''}
+      <!-- Completion report -->
+      ${(()=>{
+        const cm=pm(r.completion_media);
+        if(cm.length){
+          return `<div style="background:rgba(16,185,129,.06);border:1.5px solid rgba(16,185,129,.25);border-radius:8px;padding:12px">
+            <div class="lbl" style="color:#059669;margin-bottom:6px">✅ Отчёт о выполнении (${cm.length} файл(ов))</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${cm.map(m=>{const v=m.startsWith('data:video');return v?`<video src="${m}" style="width:100px;height:75px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="openGal('${m}')">`:`<img src="${m}" style="width:100px;height:75px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid rgba(16,185,129,.3)" onclick="openGal('${m}')" onerror="this.style.display='none'">`}).join('')}</div>
+          </div>`;
+        }
+        return `<div style="background:var(--bg3);border:1px dashed var(--bd);border-radius:8px;padding:10px 12px">
+          <div style="font-size:11px;font-weight:700;color:var(--t3);margin-bottom:8px">📸 Отчёт о выполнении</div>
+          <div id="adminCompPrev" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px"></div>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;padding:8px;border-radius:4px;border:1.5px dashed #059669;background:transparent;color:#059669;font-size:12px;font-weight:700;cursor:pointer;text-align:center">
+              📎 Прикрепить фото/видео
+              <input type="file" id="adminCompMedia" accept="image/*,video/*" multiple style="display:none" onchange="previewAdminComp(event)">
+            </label>
+            <button onclick="submitAdminReport(${r.id})" style="flex:1;padding:8px;border-radius:4px;border:none;background:#059669;color:#fff;font-size:12px;font-weight:700;cursor:pointer">✅ Загрузить отчёт</button>
+          </div>
+        </div>`;
+      })()}
       <!-- Assignee + Deadline -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div style="position:relative">
@@ -1013,6 +1242,46 @@ function openReqModal(id){
   openModal('reqModal');
 }
 
+
+// ── ADMIN COMPLETION REPORT ───────────────────────────────────────────────
+let adminCompFiles = [];
+function previewAdminComp(e) {
+  adminCompFiles = Array.from(e.target.files).slice(0,5);
+  const prev = document.getElementById('adminCompPrev');
+  if (!prev) return;
+  prev.innerHTML = adminCompFiles.map(f => {
+    const url = URL.createObjectURL(f);
+    const isV = f.type.startsWith('video');
+    return `<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;border:1.5px solid #059669">${isV ? `<video src="${url}" style="width:100%;height:100%;object-fit:cover">` : `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`}</div>`;
+  }).join('');
+}
+
+async function submitAdminReport(id) {
+  if (!adminCompFiles.length) { toast('Добавьте файлы отчёта', 'err'); return; }
+  const r = allReqs.find(x => x.id == id); if (!r) return;
+  const mediaB64 = await Promise.all(adminCompFiles.map(f => new Promise(res => {
+    const rd = new FileReader(); rd.onload = () => res(rd.result); rd.readAsDataURL(f);
+  })));
+  let existing = pm(r.completion_media);
+  const newMedia = [...existing, ...mediaB64];
+  const logs = pm(r.change_log || '[]');
+  logs.push({who: adminUser.name, action: `Добавлен отчёт о выполнении (${mediaB64.length} файл(ов))`, date: new Date().toISOString()});
+  await SB.from('requests').update({completion_media: newMedia, change_log: logs, status: 'completed'}).eq('id', id);
+  Object.assign(r, {completion_media: newMedia, status: 'completed', change_log: JSON.stringify(logs)});
+  adminCompFiles = [];
+  // Notify author
+  if (r.author_id) {
+    await SB.from('notifications').insert({
+      user_id: r.author_id, title: '✅ Отчёт о выполнении', 
+      message: `${adminUser.name} загрузил отчёт по заявке ${pad(id)}`,
+      type: 'status_update', post_id: id, read: false, date: new Date().toISOString()
+    }).catch(()=>{});
+  }
+  toast('✅ Отчёт загружен');
+  filterReqs(); renderDash();
+  openReqModal(id);
+}
+
 function filterAss(){
   const q=document.getElementById('assInput').value.toLowerCase();
   const ac=document.getElementById('assAC');
@@ -1022,6 +1291,17 @@ function filterAss(){
   ac.style.display='block';
   ac.innerHTML=m.map(u=>`<div class="acitem" onclick="selAss('${u.name}')"><div class="av" style="width:24px;height:24px;font-size:8px">${ini(u.name)}</div>${u.name}</div>`).join('');
 }
+function filterDeptResp(){
+  const q=document.getElementById('dResp').value.toLowerCase();
+  const ac=document.getElementById('dRespAC');
+  if(!q){ac.style.display='none';return;}
+  const m=allUsers.filter(u=>u.name.toLowerCase().includes(q)).slice(0,6);
+  if(!m.length){ac.style.display='none';return;}
+  ac.style.display='block';
+  ac.innerHTML=m.map(u=>`<div class="acitem" onclick="selDeptResp('${u.name.replace(/'/g,"\'")}')"><div class="av" style="width:24px;height:24px;font-size:8px">${ini(u.name)}</div>${u.name}</div>`).join('');
+}
+function selDeptResp(n){document.getElementById('dResp').value=n;document.getElementById('dRespVal').value=n;document.getElementById('dRespAC').style.display='none';}
+
 function selAss(n){document.getElementById('assInput').value=n;document.getElementById('assVal').value=n;document.getElementById('assAC').style.display='none';}
 
 async function addAdminComm(id){
@@ -1130,7 +1410,7 @@ function openUserModal(userId){
       </div>
       <div><label class="lbl">Участок</label><select class="inp" id="uDeptS">${dOpts}</select></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="lbl">Баллы</label><input class="inp" id="uPointsI" type="number" value="${u.points||0}"></div>
+        <div><label class="lbl">ТОП</label><input class="inp" id="uPointsI" type="number" value="${u.points||0}"></div>
         <div><label class="lbl">Телефон</label><input class="inp" id="uPhoneI" value="${u.phone||''}"></div>
       </div>
       <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;font-size:12px;color:#92400e">⚠️ Изменения вступают в силу при следующем входе пользователя.</div>
@@ -1173,6 +1453,8 @@ function openDeptModal(id='', parentId='', parentName=''){
   document.getElementById('dId').value=id;
   document.getElementById('dName').value=d?.name||'';
   document.getElementById('dDesc').value=d?.description||'';
+  document.getElementById('dResp').value=d?.responsible||'';
+  document.getElementById('dRespVal').value=d?.responsible||'';
   const parents=allDepts.filter(x=>!x.parent_id&&x.id!==id);
   document.getElementById('dParent').innerHTML='<option value="">— Корневой (верхний уровень) —</option>'+
     parents.map(p=>`<option value="${p.id}" ${(d?.parent_id||parentId)===p.id?'selected':''}>${p.name}</option>`).join('');
@@ -1180,7 +1462,7 @@ function openDeptModal(id='', parentId='', parentName=''){
 }
 async function saveDept(){
   const id=document.getElementById('dId').value;
-  const rec={name:document.getElementById('dName').value.trim(),description:document.getElementById('dDesc').value.trim()||null,parent_id:document.getElementById('dParent').value||null};
+  const rec={name:document.getElementById('dName').value.trim(),description:document.getElementById('dDesc').value.trim()||null,parent_id:document.getElementById('dParent').value||null,responsible:document.getElementById('dRespVal').value||document.getElementById('dResp').value||null};
   if(!rec.name){toast('Введите название','err');return;}
   if(id){const{error}=await SB.from('departments').update(rec).eq('id',id);if(error){toast('Ошибка: '+error.message,'err');return;}}
   else{const{error}=await SB.from('departments').insert(rec);if(error){toast('Ошибка: '+error.message,'err');return;}}
@@ -1240,7 +1522,7 @@ async function saveAch(){const id=document.getElementById('aId').value;const rec
 async function delAch(id){if(!confirm('Удалить?'))return;await SB.from('achievements').delete().eq('id',id);toast('Удалено','info');loadAchPage();}
 
 // ── SHOP ───────────────────────────────────────────────────────────
-async function loadShopPage(){const{data}=await SB.from('shop_items').select('*').order('points');const g=document.getElementById('shopGrid');if(!g)return;g.innerHTML=(data||[]).map(i=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${i.icon}</div><div style="font-size:13px;font-weight:700">${i.title}</div><div style="font-size:15px;font-weight:800;color:var(--acc);margin-top:4px">${i.points} б.</div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editShop(${i.id})">✏️</button><button class="btn bd bsm" onclick="delShop(${i.id})">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Товаров нет</div>';}
+async function loadShopPage(){const{data}=await SB.from('shop_items').select('*').order('points');const g=document.getElementById('shopGrid');if(!g)return;g.innerHTML=(data||[]).map(i=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${i.icon}</div><div style="font-size:13px;font-weight:700">${i.title}</div><div style="font-size:15px;font-weight:800;color:var(--acc);margin-top:4px">${i.points} ТОП</div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editShop(${i.id})">✏️</button><button class="btn bd bsm" onclick="delShop(${i.id})">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Товаров нет</div>';}
 function openShopModal(){document.getElementById('sId').value='';document.getElementById('sIcon').value='🎁';document.getElementById('sTitle').value='';document.getElementById('sPoints').value='100';document.getElementById('sColor').value='';openModal('shopModal');}
 async function editShop(id){const{data}=await SB.from('shop_items').select('*').eq('id',id).single();if(!data)return;document.getElementById('sId').value=id;document.getElementById('sIcon').value=data.icon||'🎁';document.getElementById('sTitle').value=data.title||'';document.getElementById('sPoints').value=data.points||100;document.getElementById('sColor').value=data.color||'';openModal('shopModal');}
 async function saveShopItem(){const id=document.getElementById('sId').value;const rec={icon:document.getElementById('sIcon').value,title:document.getElementById('sTitle').value,points:parseInt(document.getElementById('sPoints').value),color:document.getElementById('sColor').value};if(id){await SB.from('shop_items').update(rec).eq('id',id);toast('Обновлено');}else{await SB.from('shop_items').insert(rec);toast('Добавлено ✅');}closeModal('shopModal');loadShopPage();}
