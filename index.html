@@ -1475,11 +1475,12 @@ async function loadPosts(reset=true) {
   if (reset) {
     pageOffset = 0; hasMorePosts = true; posts = [];
     if (list) list.innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+    // Load likes in background (non-blocking)
     if (user) {
-      try {
-        const { data: likedData } = await SB.from('likes').select('post_id').eq('user_id', user.empId);
-        likedPosts = new Set((likedData||[]).map(l => l.post_id));
-      } catch(e) { console.warn('likes load failed:', e); }
+      SB.from('likes').select('post_id').eq('user_id', user.empId)
+        .then(({ data: likedData }) => {
+          likedPosts = new Set((likedData||[]).map(l => l.post_id));
+        }).catch(e => console.warn('likes load failed:', e));
     }
   }
   if (!hasMorePosts || isLoadingMore) return;
@@ -1494,7 +1495,7 @@ async function loadPosts(reset=true) {
           .select('id,type,description,author,author_id,location,date,created_at,status,likes,comments,media,risk_urgency,risk_event_type,anonymous,assigned_to,admin_comment,completion_media,change_log,deadline')
           .order('id', {ascending: false})
           .range(pageOffset, pageOffset + PAGE_SIZE - 1),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
       ]);
       data = result.data; error = result.error;
       if (!error) break;
@@ -1515,6 +1516,10 @@ async function loadPosts(reset=true) {
     posts = reset ? data : [...posts, ...data];
     hasMorePosts = data.length === PAGE_SIZE;
     pageOffset += data.length;
+    // Cache first page for instant next open
+    if (reset && data.length > 0) {
+      try { sessionStorage.setItem('cached_posts', JSON.stringify(posts.slice(0, PAGE_SIZE))); } catch(e) {}
+    }
   }
   renderFeed();
 }
@@ -1992,20 +1997,28 @@ document.getElementById('createForm').addEventListener('submit', async e => {
     risk_urgency: (()=>{ const r=document.querySelector('input[name="cUrgencyR"]:checked'); return r?parseInt(r.value):null; })(),
     anonymous: isAnon
   };
-  const { data: saved, error } = await SB.from('requests').insert(rec).select().single();
-  if (error) {
-    btn.disabled = false; btn.textContent = 'Опубликовать';
-    alert('Ошибка: ' + error.message); return;
-  }
-  // ── Сначала закрываем и сбрасываем форму ──
+  // Optimistic insert — show immediately
+  const tempId = Date.now();
+  const tempPost = {...rec, id: tempId, _temp: true};
+  posts.unshift(tempPost);
   closeModal('createModal');
   btn.disabled = false; btn.textContent = 'Опубликовать';
   e.target.reset();
   document.getElementById('mediaPrev').innerHTML = '';
   mediaFiles = [];
   toggleRisk();
-  // ── Потом обновляем данные ──
-  posts.unshift(saved);
+  renderFeed();
+  // Then actually save
+  const { data: saved, error } = await SB.from('requests').insert(rec).select().single();
+  if (error) {
+    // Remove optimistic post
+    posts = posts.filter(p => p.id !== tempId);
+    renderFeed();
+    alert('Ошибка сохранения: ' + error.message); return;
+  }
+  // Replace temp with real
+  const tempIdx = posts.findIndex(p => p.id === tempId);
+  if (tempIdx >= 0) posts[tempIdx] = saved; else posts.unshift(saved);
   renderFeed();
   // TZ: 5pts base for any submission, +extra for risks
   const riskBonus = type==='risk' ? (()=>{ const urgR=document.querySelector('input[name="cUrgencyR"]:checked'); return urgR&&parseInt(urgR.value)===1?10:urgR&&parseInt(urgR.value)===2?7:5; })() : 0;
@@ -2311,7 +2324,16 @@ async function launchApp(u) {
     if (hdr && sb) sb.style.top = hdr.getBoundingClientRect().height + 'px';
   }, 100);
   // Load feed
-  loadPosts();
+  // Try to show cached posts immediately, then refresh in background
+  const cachedPosts = (() => { try { return JSON.parse(sessionStorage.getItem('cached_posts')||'[]'); } catch { return []; } })();
+  if (cachedPosts.length) {
+    posts = cachedPosts;
+    renderFeed();
+    // Refresh silently in background
+    setTimeout(() => loadPosts(), 100);
+  } else {
+    loadPosts();
+  }
   loadNotifBadge();
   loadAllUsers();
   loadDepartments(); // populate dept selects everywhere
