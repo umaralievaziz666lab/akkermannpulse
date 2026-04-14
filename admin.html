@@ -10,6 +10,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',system-ui,sans-serif;background:#e8e7e3;color:#0f1c2c;min-height:100vh}
@@ -165,11 +167,26 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
       <div style="font-size:17px;font-weight:800;background:linear-gradient(135deg,#f53d2d,#c42b1c);-webkit-background-clip:text;-webkit-text-fill-color:transparent">AKKERMANN PULSE</div>
       <div style="font-size:12px;color:var(--t3);margin-top:3px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase">ПАНЕЛЬ АДМИНИСТРАТОРА</div>
     </div>
+    <!-- Step 1: employee ID -->
     <form id="authForm" style="display:flex;flex-direction:column;gap:12px">
       <div><label class="lbl">Табельный номер</label><input class="inp" id="authId" required placeholder="11111"></div>
-      <button type="submit" class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px;letter-spacing:.08em" id="authBtn">ВОЙТИ</button>
+      <button type="submit" class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px;letter-spacing:.08em" id="authBtn">ДАЛЕЕ →</button>
       <div id="authErr" style="display:none;color:#ef4444;font-size:12px;text-align:center"></div>
     </form>
+    <!-- Step 2: 2FA code -->
+    <div id="twoFaStep" style="display:none;flex-direction:column;gap:12px">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:6px">📱</div>
+        <div style="font-size:13px;font-weight:700;color:#1e40af">Код отправлен в Telegram</div>
+        <div style="font-size:12px;color:#3b82f6;margin-top:4px">Проверьте бот <b>@AkkermannPulseBot</b></div>
+      </div>
+      <div><label class="lbl">Введите 6-значный код</label>
+        <input class="inp" id="twoFaCode" placeholder="000000" maxlength="6" style="font-size:22px;letter-spacing:.3em;text-align:center" oninput="this.value=this.value.replace(/\D/g,'')">
+      </div>
+      <button onclick="verify2FA()" class="btn bp" style="width:100%;justify-content:center;padding:12px;font-size:14px" id="twoFaBtn">✅ ПОДТВЕРДИТЬ</button>
+      <button onclick="back2FA()" style="background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;text-align:center">← Назад</button>
+      <div id="twoFaErr" style="display:none;color:#ef4444;font-size:12px;text-align:center"></div>
+    </div>
   </div>
 </div>
 
@@ -186,6 +203,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
       <button class="ni" onclick="showPage('news')" data-page="news"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>Новости</button>
       <button class="ni" onclick="showPage('achievements')" data-page="achievements"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></span>Достижения</button>
       <button class="ni" onclick="showPage('shop')" data-page="shop"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>Магазин</button>
+      <button class="ni" onclick="showPage('login_history')" data-page="login_history"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>История входов</button>
       <button class="ni" onclick="showPage('groups')" data-page="groups"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></span>Группы</button>
     </nav>
     <div class="sb-btm">
@@ -252,6 +270,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
           <button class="btn bg bsm" onclick="setDR(30)">30д</button>
           <button class="btn bg bsm" onclick="setDR(90)">3 мес</button>
           <button class="btn bg bsm" onclick="setDR(0)">Всё</button>
+          <button class="btn bsm" onclick="sendWeeklyDigest()" style="background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3);margin-left:8px">📤 Дайджест в TG</button>
         </div>
         <div class="cr">
           <div class="cc"><div class="ct">Статусы</div><canvas id="cStatus" height="150"></canvas></div>
@@ -262,6 +281,21 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
         <div class="card">
           <div class="ch"><div class="ct2">Последние заявки</div><button class="btn bsm" onclick="showPage('requests')" data-page="requests" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25)">Все →</button></div>
           <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Автор</th><th>Участок</th><th>Описание</th><th>Статус</th><th>Дата</th></tr></thead><tbody id="recentReqs"></tbody></table></div>
+        </div>
+        <!-- Dept comparison -->
+        <div class="card" style="margin-top:14px">
+          <div class="ch">
+            <div class="ct2">📊 Сравнение участков</div>
+            <div style="display:flex;gap:6px">
+              <select id="cmpFrom" class="inp" style="padding:4px 8px;font-size:11px;width:auto;background:rgba(255,255,255,.1);color:#e8e7e3;border-color:rgba(255,255,255,.2)"><option value="">Все периоды</option></select>
+              <button class="btn bsm" onclick="renderDeptComparison()" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25)">Обновить</button>
+              <button class="btn bsm" onclick="exportDeptPDF()" style="background:rgba(245,61,45,.2);color:#f87171;border:1px solid rgba(245,61,45,.3)">📄 PDF</button>
+            </div>
+          </div>
+          <div style="padding:14px">
+            <div id="deptCompTable" style="overflow-x:auto"></div>
+            <div style="margin-top:14px"><canvas id="cDeptComp" height="100"></canvas></div>
+          </div>
         </div>
       </div>
 
@@ -310,6 +344,16 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
         <div class="card" style="padding:14px">
           <div style="font-size:12px;color:var(--t3);line-height:1.6">
             ⚙️ <strong>Как работает иерархия:</strong> Корневой участок — это цех или подразделение (например «Цех 1»). Дочерний — конкретное рабочее место внутри него (например «Сверлильный станок»). При выборе участка в мобильном приложении пользователи видят оба уровня.
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGIN HISTORY -->
+      <div class="page" id="page-login_history">
+        <div class="card">
+          <div class="ch"><div class="ct2">История входов в систему</div><button class="btn bsm" onclick="clearOldLogins()" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)">🗑 Очистить старые</button></div>
+          <div style="padding:14px">
+            <div id="loginHistoryList"><div style="text-align:center;padding:30px;color:var(--t3)">Загрузка…</div></div>
           </div>
         </div>
       </div>
@@ -577,29 +621,7 @@ function openGal(src) {
 function closeGal() { document.getElementById('gOverlay').classList.remove('open'); }
 
 // ── AUTH ──────────────────────────────────────────────────────────
-document.getElementById('authForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  const btn=document.getElementById('authBtn'); btn.disabled=true; btn.textContent='…';
-  const err=document.getElementById('authErr'); err.style.display='none';
-  const {data}=await SB.from('users').select('*').eq('id',document.getElementById('authId').value.trim()).single();
-  btn.disabled=false; btn.textContent='Войти';
-  if(!data||!['admin','manager'].includes(data.role)){err.style.display='';err.textContent='❌ Нет доступа. Требуется роль Администратора или Руководителя.';return;}
-  // SECURITY: check account is not locked
-  if(data.is_locked){err.style.display='';err.textContent='❌ Аккаунт заблокирован. Обратитесь к администратору.';return;}
-  adminUser=data;
-  saveSession(data.id);
-  document.getElementById('adminName').textContent=data.name;
-  document.getElementById('adminAv').textContent=ini(data.name);
-  const r=ROLES[data.role];if(r)document.getElementById('adminRoleLbl').textContent=r.label;
-  document.getElementById('authScreen').style.display='none';
-  document.getElementById('adminApp').style.display='block';
-  setDR(30);
-  await refreshAll();
-  SB.channel('admin-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'requests'},()=>loadReqs())
-    .on('postgres_changes',{event:'*',schema:'public',table:'users'},()=>loadUsers())
-    .subscribe();
-});
+// Auth handled by doLogin() — see 2FA section above
 
 // ── SIDEBAR TOGGLE ────────────────────────────────────────────────────────
 function toggleSidebar() {
@@ -608,7 +630,7 @@ function toggleSidebar() {
 }
 
 // ── ROLE-BASED TAB VISIBILITY ─────────────────────────────────────────────
-const ADMIN_ONLY_PAGES = ['users','departments','roles','achievements','shop','groups'];
+const ADMIN_ONLY_PAGES = ['users','departments','roles','achievements','shop','groups','login_history'];
 
 function applyRoleVisibility() {
   if (!adminUser) return;
@@ -953,6 +975,424 @@ async function deleteGroup(id) {
   toast('Удалено', 'info');
 }
 
+
+// ── TWO-FACTOR AUTH ───────────────────────────────────────────────────────
+let _2faUserId = null;
+let _2faCode = null;
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtycmtucHVuemVrb2dzYnRqc2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjA3MTAsImV4cCI6MjA5MTYzNjcxMH0.-2TGWk1VE9mVah3uW30Ea-OBlY9yixoSj38nFv6oytA';
+const TG_BOT = '8716415468:AAFWMaHxGnTzeDw8lI6WplGhW-kAPSs0E54';
+const PROJ_URL = 'https://krrknpunzekogsbtjsll.supabase.co';
+
+async function sendTelegramMsg(chatId, text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({chat_id: chatId, text, parse_mode: 'Markdown'})
+    });
+  } catch(e) {}
+}
+
+// Override auth form to add 2FA step
+document.getElementById('authForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('authBtn');
+  const err = document.getElementById('authErr');
+  btn.disabled = true; btn.textContent = '…';
+  err.style.display = 'none';
+  const empId = document.getElementById('authId').value.trim();
+  const {data} = await SB.from('users').select('*').eq('id', empId).single();
+  btn.disabled = false; btn.textContent = 'ДАЛЕЕ →';
+  if (!data || !['admin','manager'].includes(data.role)) {
+    err.style.display = ''; err.textContent = '❌ Нет доступа. Требуется роль Администратора или Руководителя.'; return;
+  }
+  if (data.is_locked) { err.style.display = ''; err.textContent = '❌ Аккаунт заблокирован.'; return; }
+  _2faUserId = data.id;
+  // Generate 6-digit code
+  _2faCode = String(Math.floor(100000 + Math.random() * 900000));
+  // Store in DB with expiry
+  try {
+    await SB.from('two_fa_codes').upsert({user_id: data.id, code: _2faCode, created_at: new Date().toISOString()});
+  } catch(ex) {
+    // Table may not exist — fallback: store in memory only
+    window._2faMemCode = _2faCode;
+  }
+  // Send via Telegram
+  if (data.telegram_id) {
+    await sendTelegramMsg(data.telegram_id,
+      `🔐 *Вход в админ-панель Akkermann Pulse*\n\nВаш код подтверждения:\n\`${_2faCode}\`\n\n_Код действителен 5 минут. Никому не сообщайте._`);
+    document.getElementById('authForm').style.display = 'none';
+    document.getElementById('twoFaStep').style.display = 'flex';
+  } else {
+    // No Telegram — skip 2FA, log in directly
+    await doLogin(data);
+  }
+}, {once: false});
+
+// Remove the old authForm listener that runs on DOM init (we replaced it)
+async function verify2FA() {
+  const btn = document.getElementById('twoFaBtn');
+  const err = document.getElementById('twoFaErr');
+  const entered = document.getElementById('twoFaCode').value.trim();
+  btn.disabled = true; btn.textContent = '…'; err.style.display = 'none';
+  // Verify code
+  let valid = false;
+  try {
+    const {data} = await SB.from('two_fa_codes').select('*').eq('user_id', _2faUserId).single();
+    if (data && data.code === entered) {
+      const age = (Date.now() - new Date(data.created_at).getTime()) / 1000;
+      if (age < 300) valid = true; // 5 min
+    }
+  } catch(ex) {
+    // Fallback memory check
+    if (window._2faMemCode && window._2faMemCode === entered) valid = true;
+  }
+  btn.disabled = false; btn.textContent = '✅ ПОДТВЕРДИТЬ';
+  if (!valid) { err.style.display = ''; err.textContent = '❌ Неверный код. Попробуйте ещё раз.'; return; }
+  // Load user and log in
+  const {data: u} = await SB.from('users').select('*').eq('id', _2faUserId).single();
+  if (u) await doLogin(u);
+}
+
+function back2FA() {
+  document.getElementById('twoFaStep').style.display = 'none';
+  document.getElementById('authForm').style.display = 'flex';
+  document.getElementById('twoFaCode').value = '';
+  _2faCode = null; _2faUserId = null;
+}
+
+async function doLogin(data) {
+  adminUser = data;
+  saveSession(data.id);
+  document.getElementById('adminName').textContent = data.name;
+  document.getElementById('adminAv').textContent = ini(data.name);
+  const r = ROLES[data.role]; if (r) document.getElementById('adminRoleLbl').textContent = r.label;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+  // Restore sidebar state
+  if (sbStore.get('sb_hidden') === '1') document.body.classList.add('sidebar-hidden');
+  applyRoleVisibility();
+  loadAdminBellBadge();
+  setupAdminRealtime();
+  setDR(30);
+  await refreshAll();
+  // Log this login
+  await logLogin(data);
+  startSlaChecker();
+  scheduleWeeklyDigest();
+  SB.channel('admin-rt2')
+    .on('postgres_changes',{event:'*',schema:'public',table:'requests'},()=>loadReqs())
+    .on('postgres_changes',{event:'*',schema:'public',table:'users'},()=>loadUsers())
+    .subscribe();
+}
+
+// ── LOGIN HISTORY ─────────────────────────────────────────────────────────
+async function logLogin(user) {
+  const rec = {
+    user_id: user.id, user_name: user.name,
+    role: user.role, ip: 'web',
+    logged_at: new Date().toISOString(),
+    user_agent: navigator.userAgent.substring(0, 120)
+  };
+  try {
+    await SB.from('login_history').insert(rec);
+  } catch(e) {
+    // Table not exist — store in localStorage
+    const hist = JSON.parse(localStorage.getItem('login_hist') || '[]');
+    hist.unshift({...rec, id: Date.now()});
+    localStorage.setItem('login_hist', JSON.stringify(hist.slice(0, 200)));
+  }
+}
+
+async function loadLoginHistory() {
+  const el = document.getElementById('loginHistoryList');
+  if (!el) return;
+  let data = [];
+  try {
+    const res = await SB.from('login_history').select('*').order('logged_at',{ascending:false}).limit(100);
+    data = res.data || [];
+  } catch(e) {
+    data = JSON.parse(localStorage.getItem('login_hist') || '[]');
+  }
+  if (!data.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--t3)">История пуста</div>'; return; }
+  el.innerHTML = `<table style="width:100%"><thead><tr><th>Сотрудник</th><th>Роль</th><th>Дата и время</th><th>Браузер</th></tr></thead><tbody>
+    ${data.map(l => `<tr>
+      <td><strong>${l.user_name||l.user_id}</strong></td>
+      <td><span class="b b-${l.role||'staff'}">${ROLES[l.role||'staff']?.label||l.role}</span></td>
+      <td style="white-space:nowrap;color:var(--t3)">${l.logged_at ? new Date(l.logged_at).toLocaleString('ru') : '—'}</td>
+      <td style="font-size:11px;color:var(--t3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(l.user_agent||'').replace(/\(.*?\)/g,'').trim().substring(0,60)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function clearOldLogins() {
+  if (!confirm('Удалить записи старше 30 дней?')) return;
+  const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+  try {
+    await SB.from('login_history').delete().lt('logged_at', cutoff);
+    toast('Старые записи удалены');
+  } catch(e) {
+    const hist = JSON.parse(localStorage.getItem('login_hist') || '[]');
+    localStorage.setItem('login_hist', JSON.stringify(hist.filter(l => l.logged_at > cutoff)));
+    toast('Старые записи удалены');
+  }
+  loadLoginHistory();
+}
+
+// ── DEPT COMPARISON ───────────────────────────────────────────────────────
+function renderDeptComparison() {
+  const r = getFR();
+  const depts = [...new Set(r.map(x => x.location).filter(Boolean))].sort();
+  const el = document.getElementById('deptCompTable');
+  if (!el) return;
+  if (!depts.length) { el.innerHTML = '<div style="color:var(--t3);font-size:13px">Нет данных</div>'; return; }
+  const rows = depts.map(d => {
+    const dr = r.filter(x => x.location === d);
+    const ideas = dr.filter(x => x.type === 'idea').length;
+    const risks = dr.filter(x => x.type === 'risk').length;
+    const done = dr.filter(x => ['completed','approved'].includes(x.status)).length;
+    const lvl1 = dr.filter(x => x.risk_urgency === 1).length;
+    const rate = dr.length ? Math.round(done / dr.length * 100) : 0;
+    return {d, total: dr.length, ideas, risks, done, lvl1, rate};
+  }).sort((a,b) => b.total - a.total);
+  el.innerHTML = `<table style="width:100%"><thead><tr>
+    <th>Участок</th><th>Всего</th><th>💡 Идей</th><th>⚠️ Рисков</th><th>🔴 Ур.1</th><th>✅ Выполнено</th><th>Эффект.</th>
+  </tr></thead><tbody>
+    ${rows.map((row,i) => `<tr style="${i===0?'background:rgba(245,61,45,.05)':''}">
+      <td><strong>${row.d}</strong></td>
+      <td style="font-weight:700;color:var(--acc)">${row.total}</td>
+      <td>${row.ideas}</td>
+      <td>${row.risks}</td>
+      <td>${row.lvl1 ? `<span style="color:#dc2626;font-weight:700">${row.lvl1}</span>` : '—'}</td>
+      <td>${row.done}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:6px;border-radius:3px;background:var(--bg3);overflow:hidden">
+            <div style="height:100%;width:${row.rate}%;background:${row.rate>75?'#10b981':row.rate>40?'#f59e0b':'#ef4444'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:var(--t2)">${row.rate}%</span>
+        </div>
+      </td>
+    </tr>`).join('')}
+  </tbody></table>`;
+  // Bar chart
+  if (window.charts?.dc) { window.charts.dc.destroy(); delete window.charts.dc; }
+  const canvas = document.getElementById('cDeptComp');
+  if (canvas && rows.length) {
+    window.charts = window.charts || {};
+    window.charts.dc = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: rows.map(r => r.d.length > 12 ? r.d.substring(0,12)+'…' : r.d),
+        datasets: [
+          {label:'Идеи', data: rows.map(r => r.ideas), backgroundColor:'rgba(16,185,129,.7)', borderRadius:3},
+          {label:'Риски', data: rows.map(r => r.risks), backgroundColor:'rgba(245,158,11,.7)', borderRadius:3},
+        ]
+      },
+      options: {
+        plugins: {legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}},
+        scales: {x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},y:{stacked:true,beginAtZero:true,grid:{color:'#f0f2f5'},ticks:{font:{size:10}}}},
+        responsive:true, maintainAspectRatio:true
+      }
+    });
+  }
+}
+
+// ── PDF EXPORT ────────────────────────────────────────────────────────────
+async function exportDeptPDF() {
+  if (!window.jspdf) { toast('PDF библиотека загружается, подождите…','info'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const r = getFR();
+  const fromEl = document.getElementById('dateFrom')?.value;
+  const toEl   = document.getElementById('dateTo')?.value;
+  const period = (fromEl || toEl) ? `${fromEl||'начало'} — ${toEl||'сегодня'}` : 'Всё время';
+  const now = new Date().toLocaleString('ru');
+  // Header
+  doc.setFillColor(15,28,44);
+  doc.rect(0,0,297,22,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('AKKERMANN PULSE — Отчёт по участкам', 14, 10);
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(`Период: ${period}   |   Сформирован: ${now}   |   Всего заявок: ${r.length}`, 14, 18);
+  // Summary row
+  doc.setTextColor(15,28,44);
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Сводная статистика', 14, 32);
+  const summaryData = [
+    ['Всего заявок','Новых','В работе','Выполнено','Идей','Рисков','Уровень 1'],
+    [r.length, r.filter(x=>x.status==='new').length, r.filter(x=>x.status==='work').length,
+     r.filter(x=>['completed','approved'].includes(x.status)).length,
+     r.filter(x=>x.type==='idea').length, r.filter(x=>x.type==='risk').length,
+     r.filter(x=>x.risk_urgency===1).length].map(String)
+  ];
+  doc.autoTable({startY:35,head:[summaryData[0]],body:[summaryData[1]],theme:'grid',
+    headStyles:{fillColor:[245,61,45],textColor:255,fontSize:8},
+    bodyStyles:{fontSize:10,fontStyle:'bold',halign:'center'},
+    columnStyles: Object.fromEntries(summaryData[0].map((_,i)=>([i,{halign:'center'}]))),
+    margin:{left:14,right:14}});
+  // Per dept table
+  const depts = [...new Set(r.map(x=>x.location).filter(Boolean))].sort();
+  const deptRows = depts.map(d => {
+    const dr = r.filter(x=>x.location===d);
+    const done = dr.filter(x=>['completed','approved'].includes(x.status)).length;
+    return [d, dr.length, dr.filter(x=>x.type==='idea').length, dr.filter(x=>x.type==='risk').length,
+            dr.filter(x=>x.risk_urgency===1).length, done,
+            dr.length ? Math.round(done/dr.length*100)+'%' : '0%'];
+  }).sort((a,b)=>b[1]-a[1]);
+  const yAfterSummary = doc.lastAutoTable.finalY + 8;
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Детализация по участкам', 14, yAfterSummary);
+  doc.autoTable({startY: yAfterSummary+3,
+    head:[['Участок','Всего','Идей','Рисков','Ур.1 🔴','Выполнено','Эффект.']],
+    body: deptRows, theme:'striped',
+    headStyles:{fillColor:[15,28,44],textColor:255,fontSize:9},
+    bodyStyles:{fontSize:9},
+    columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center',textColor:[220,38,38],fontStyle:'bold'},5:{halign:'center'},6:{halign:'center'}},
+    margin:{left:14,right:14}});
+  // Recent level-1 risks
+  const lvl1 = r.filter(x=>x.risk_urgency===1 && x.type==='risk').slice(0,10);
+  if (lvl1.length) {
+    const y2 = doc.lastAutoTable.finalY + 8;
+    if (y2 < 185) {
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(220,38,38);
+      doc.text('🔴 Критические риски (Уровень 1)', 14, y2);
+      doc.setTextColor(15,28,44);
+      doc.autoTable({startY:y2+3,
+        head:[['ID','Участок','Описание','Статус','Ответственный']],
+        body:lvl1.map(x=>[pad(x.id),x.location||'—',(x.description||'').substring(0,50),
+          {new:'Новая',work:'В работе',approved:'Принята',completed:'Выполнена'}[x.status]||x.status,
+          x.assigned_to||'—']),
+        theme:'grid',
+        headStyles:{fillColor:[220,38,38],textColor:255,fontSize:8},
+        bodyStyles:{fontSize:8},
+        columnStyles:{2:{cellWidth:80}},
+        margin:{left:14,right:14}});
+    }
+  }
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i=1;i<=pageCount;i++) {
+    doc.setPage(i);
+    doc.setFontSize(8); doc.setTextColor(150,150,150);
+    doc.text(`Akkermann Pulse | Стр. ${i} из ${pageCount}`, 14, 205);
+    doc.text(now, 220, 205);
+  }
+  doc.save(`akkermann_report_${new Date().toISOString().slice(0,10)}.pdf`);
+  toast('✅ PDF скачан');
+}
+
+// ── SLA OVERDUE TELEGRAM ALERTS ───────────────────────────────────────────
+const SLA_REACT_HOURS = {1: 2, 2: 24, 3: 48};   // time to react
+const SLA_REMIND_HOURS = {1: 1.5, 2: 20, 3: 44}; // remind 30min / 4h before deadline
+
+async function checkSlaOverdue() {
+  if (!adminUser) return;
+  const now = Date.now();
+  const openReqs = allReqs.filter(r => ['new','work'].includes(r.status) && r.risk_urgency);
+  for (const req of openReqs) {
+    const created = new Date(req.date || req.created_at).getTime();
+    const elapsed = (now - created) / 3600000;
+    const slaH = SLA_REACT_HOURS[req.risk_urgency] || 48;
+    const remH = SLA_REMIND_HOURS[req.risk_urgency] || 44;
+    // Already notified? Use change_log to check
+    const logs = (() => { try { return JSON.parse(req.change_log||'[]'); } catch { return []; } })();
+    const alreadySentOverdue = logs.some(l => l.action?.includes('SLA_OVERDUE_SENT'));
+    const alreadySentRemind  = logs.some(l => l.action?.includes('SLA_REMIND_SENT'));
+    // Send 2h-before reminder
+    if (!alreadySentRemind && elapsed >= remH && elapsed < slaH) {
+      const remaining = Math.round((slaH - elapsed) * 60);
+      if (req.assigned_to) {
+        const assignee = allUsers.find(u => u.name === req.assigned_to);
+        if (assignee?.telegram_id) {
+          await sendTelegramMsg(assignee.telegram_id,
+            `⏰ *Напоминание: дедлайн через ${remaining} мин!*\n\nЗаявка ${pad(req.id)} — ${req.location||''}\n«${(req.description||'').substring(0,80)}»\n\nУровень: ${{1:'🔴 Критический',2:'🟡 Средний',3:'🟢 Низкий'}[req.risk_urgency]}`);
+        }
+      }
+      // Mark as reminded
+      logs.push({who:'system', action:'SLA_REMIND_SENT', date: new Date().toISOString()});
+      SB.from('requests').update({change_log: logs}).eq('id', req.id).catch(()=>{});
+    }
+    // Send overdue alert
+    if (!alreadySentOverdue && elapsed > slaH) {
+      const overH = Math.round(elapsed - slaH);
+      // Notify admins and managers
+      const managers = allUsers.filter(u => ['admin','manager'].includes(u.role));
+      for (const m of managers) {
+        if (m.telegram_id) {
+          await sendTelegramMsg(m.telegram_id,
+            `🚨 *SLA НАРУШЕН!*\n\nЗаявка ${pad(req.id)}\nУчасток: ${req.location||'—'}\nУровень: ${{1:'🔴 Критический',2:'🟡 Средний',3:'🟢 Низкий'}[req.risk_urgency]}\nПросрочено на: *${overH}ч*\nОтветственный: ${req.assigned_to||'не назначен'}\n\n«${(req.description||'').substring(0,100)}»`);
+        }
+      }
+      logs.push({who:'system', action:'SLA_OVERDUE_SENT', date: new Date().toISOString()});
+      SB.from('requests').update({change_log: logs, status: req.status === 'new' ? 'new' : req.status}).eq('id', req.id).catch(()=>{});
+    }
+  }
+}
+
+// Run SLA check every 5 minutes while admin panel is open
+let _slaInterval = null;
+function startSlaChecker() {
+  if (_slaInterval) clearInterval(_slaInterval);
+  checkSlaOverdue(); // immediate first run
+  _slaInterval = setInterval(checkSlaOverdue, 5 * 60 * 1000);
+}
+
+// ── WEEKLY DIGEST ─────────────────────────────────────────────────────────
+async function sendWeeklyDigest() {
+  // Calculate stats for the past 7 days
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 86400000).toISOString();
+  const weekReqs = allReqs.filter(r => (r.date || r.created_at || '') >= weekAgo);
+  const total = weekReqs.length;
+  const done  = weekReqs.filter(r => ['completed','approved'].includes(r.status)).length;
+  const lvl1  = weekReqs.filter(r => r.risk_urgency === 1).length;
+  const ideas = weekReqs.filter(r => r.type === 'idea').length;
+  const risks = weekReqs.filter(r => r.type === 'risk').length;
+  const rate  = total ? Math.round(done / total * 100) : 0;
+  // Top dept
+  const deptCounts = {};
+  weekReqs.forEach(r => { if(r.location) deptCounts[r.location] = (deptCounts[r.location]||0)+1; });
+  const topDept = Object.entries(deptCounts).sort((a,b)=>b[1]-a[1])[0];
+  // Top contributor
+  const authorCounts = {};
+  weekReqs.forEach(r => { if(r.author && !r.anonymous) authorCounts[r.author] = (authorCounts[r.author]||0)+1; });
+  const topAuthor = Object.entries(authorCounts).sort((a,b)=>b[1]-a[1])[0];
+  const weekStr = `${new Date(weekAgo).toLocaleDateString('ru')} — ${now.toLocaleDateString('ru')}`;
+  const text = `📊 *Еженедельный дайджест Akkermann Pulse*\n${weekStr}\n\n` +
+    `📋 Заявок за неделю: *${total}*\n` +
+    `💡 Идей: ${ideas}  ⚠️ Рисков: ${risks}\n` +
+    `🔴 Критических (ур.1): *${lvl1}*\n` +
+    `✅ Выполнено: ${done} (${rate}%)\n` +
+    (topDept ? `\n🏭 Самый активный участок: *${topDept[0]}* (${topDept[1]} заявок)` : '') +
+    (topAuthor ? `\n🏆 Лидер недели: *${topAuthor[0]}* (${topAuthor[1]} заявок)` : '') +
+    `\n\n_Открыть панель: https://t.me/AkkermannPulseBot_`;
+  // Send to all admins and managers
+  const managers = allUsers.filter(u => ['admin','manager'].includes(u.role));
+  let sent = 0;
+  for (const m of managers) {
+    if (m.telegram_id) { await sendTelegramMsg(m.telegram_id, text); sent++; }
+  }
+  toast(`✅ Дайджест отправлен ${sent} руководителям`);
+}
+
+// Schedule weekly digest check
+function scheduleWeeklyDigest() {
+  // Check every hour if it's Monday 09:00
+  setInterval(() => {
+    const now = new Date();
+    if (now.getDay() === 1 && now.getHours() === 9 && now.getMinutes() < 5) {
+      const lastSent = localStorage.getItem('last_digest');
+      const today = now.toISOString().slice(0,10);
+      if (lastSent !== today) {
+        localStorage.setItem('last_digest', today);
+        sendWeeklyDigest();
+      }
+    }
+  }, 60 * 60 * 1000);
+}
+
 function adminLogout(){if(!confirm('Выйти?'))return;clearSession();document.getElementById('adminApp').style.display='none';document.getElementById('authScreen').style.display='flex';adminUser=null;}
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -975,6 +1415,8 @@ function showPage(id){
   if(id==='shop')     { loadShopPage(); }
   if(id==='departments'){ loadDepts(); }
   if(id==='groups'){ loadGroups(); }
+  if(id==='login_history'){ loadLoginHistory(); }
+  if(id==='dashboard'){ setTimeout(renderDeptComparison, 100); }
   if(id==='roles')    { renderRoles(); }
 }
 
