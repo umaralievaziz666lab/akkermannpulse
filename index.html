@@ -2327,7 +2327,7 @@ async function launchApp(u) {
     window._rtSubscribed = true;
     SB.channel('rt-requests')
       .on('postgres_changes', {event:'INSERT', schema:'public', table:'requests', filter:'status=eq.new'}, p => {
-        if (!posts.find(x => x.id === p.new.id)) { posts.unshift(p.new); renderFeed(); }
+        if (!posts.find(x => x.id === p.new.id)) { posts.unshift(p.new); renderFeed(); checkNewLvl1Posts([p.new]); }
       })
       .on('postgres_changes', {event:'UPDATE', schema:'public', table:'requests'}, p => {
         const i = posts.findIndex(x => x.id === p.new.id);
@@ -2613,6 +2613,41 @@ async function updateBellBadge() {
   Функция pushNotif записывает в таблицу notifications.
   Edge Function слушает INSERT в notifications и шлёт в Telegram.
 */
+
+
+// ── SOUND ALERT FOR LEVEL-1 RISK ─────────────────────────────────────────
+let _soundEnabled = true;
+
+function playAlertSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Create urgent beep pattern: 3 short high-pitched beeps
+    const beep = (startTime, freq, dur) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.3, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      osc.start(startTime); osc.stop(startTime + dur);
+    };
+    beep(ctx.currentTime,       880, 0.12);
+    beep(ctx.currentTime + 0.15, 880, 0.12);
+    beep(ctx.currentTime + 0.30, 1174, 0.25);
+  } catch(e) {}
+}
+
+function checkNewLvl1Posts(newPosts) {
+  if (!_soundEnabled) return;
+  const lvl1 = newPosts.filter(p => p.risk_urgency === 1 && p.type === 'risk');
+  if (lvl1.length > 0) {
+    playAlertSound();
+    lvl1.forEach(p => {
+      showToast(`🚨 НОВЫЙ РИСК УРОВЕНЬ 1: ${pad(p.id)} — ${p.location||''}`);
+    });
+  }
+}
 
 // Start
 init();
