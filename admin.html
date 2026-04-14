@@ -9,6 +9,7 @@
 <title>Akkermann Pulse — Админ</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',system-ui,sans-serif;background:#e8e7e3;color:#0f1c2c;min-height:100vh}
@@ -141,6 +142,17 @@ tbody tr:hover td{background:#f5f4f0;cursor:pointer}
 /* RESPONSIVE */
 @media(max-width:960px){.sg{grid-template-columns:1fr 1fr}.cr{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.sg{grid-template-columns:1fr 1fr}.cr{grid-template-columns:1fr}}
+/* SIDEBAR TOGGLE */
+body.sidebar-hidden .sidebar{transform:translateX(-100%);transition:transform .25s}
+body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
+.sidebar{transition:transform .25s}
+.main{transition:margin .25s}
+/* BELL DROPDOWN */
+.bell-dropdown{display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;max-height:500px;background:#fff;border-radius:4px;box-shadow:0 8px 30px rgba(0,0,0,.2);z-index:200;overflow:hidden;border:1px solid var(--bd);border-top:3px solid var(--red)}
+.bell-dropdown.open{display:block}
+.bell-notif{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bg3);transition:.1s}
+.bell-notif:hover{background:var(--bg3)}
+.bell-notif.unread{border-left:3px solid var(--red);background:rgba(245,61,45,.04)}
 </style>
 </head>
 <body>
@@ -166,14 +178,14 @@ tbody tr:hover td{background:#f5f4f0;cursor:pointer}
   <aside class="sidebar">
     <div class="sb-logo"><div class="t" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:.12em;color:#e8e7e3">AKKERMANN</div><div class="s" style="font-size:10px;color:rgba(232,231,227,0.5);letter-spacing:.1em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif">PULSE · ADMIN</div></div>
     <nav class="sb-nav">
-      <button class="ni active" onclick="showPage('dashboard')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="3" y="14" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="14" width="7" height="7" stroke-width="2" rx="1"/></svg></span>Дашборд</button>
-      <button class="ni" onclick="showPage('requests')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 12h.01M8 12h.01M16 12h.01"/></svg></span>Заявки<span class="nb" id="nbReq">0</span></button>
-      <button class="ni" onclick="showPage('users')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>Пользователи</button>
-      <button class="ni" onclick="showPage('departments')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21v-6h6v6"/></svg></span>Участки</button>
-      <button class="ni" onclick="showPage('roles')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></span>Роли</button>
-      <button class="ni" onclick="showPage('news')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>Новости</button>
-      <button class="ni" onclick="showPage('achievements')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></span>Достижения</button>
-      <button class="ni" onclick="showPage('shop')"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>Магазин</button>
+      <button class="ni active" onclick="showPage('dashboard')" data-page="dashboard"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="3" width="7" height="7" stroke-width="2" rx="1"/><rect x="3" y="14" width="7" height="7" stroke-width="2" rx="1"/><rect x="14" y="14" width="7" height="7" stroke-width="2" rx="1"/></svg></span>Дашборд</button>
+      <button class="ni" onclick="showPage('requests')" data-page="requests"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M12 12h.01M8 12h.01M16 12h.01"/></svg></span>Заявки<span class="nb" id="nbReq">0</span></button>
+      <button class="ni" onclick="showPage('users')" data-page="users"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-width="2"/><path stroke-width="2" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>Пользователи</button>
+      <button class="ni" onclick="showPage('departments')" data-page="departments"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21v-6h6v6"/></svg></span>Участки</button>
+      <button class="ni" onclick="showPage('roles')" data-page="roles"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></span>Роли</button>
+      <button class="ni" onclick="showPage('news')" data-page="news"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>Новости</button>
+      <button class="ni" onclick="showPage('achievements')" data-page="achievements"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg></span>Достижения</button>
+      <button class="ni" onclick="showPage('shop')" data-page="shop"><span class="ic"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></span>Магазин</button>
     </nav>
     <div class="sb-btm">
       <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;background:rgba(255,255,255,0.08)">
@@ -186,10 +198,29 @@ tbody tr:hover td{background:#f5f4f0;cursor:pointer}
 
   <div class="main">
     <div class="topbar">
-      <div style="font-size:18px;font-weight:800;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em" id="pgTitle">Дашборд</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="toggleSidebar()" title="Скрыть/показать панель" style="background:none;border:none;cursor:pointer;color:rgba(232,231,227,0.7);display:flex;align-items:center;padding:4px;border-radius:4px" onmouseenter="this.style.background='rgba(255,255,255,.1)'" onmouseleave="this.style.background='none'">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div style="font-size:18px;font-weight:800;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.06em" id="pgTitle">Дашборд</div>
+      </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:11px;color:rgba(232,231,227,0.5)" id="lastUpd"></span>
         <button class="btn bsm" onclick="refreshAll()" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25);border-radius:3px">🔄 Обновить</button>
+        <!-- Bell -->
+        <div style="position:relative">
+          <button id="adminBellBtn" onclick="toggleAdminBell()" style="background:none;border:none;cursor:pointer;color:rgba(232,231,227,0.7);display:flex;align-items:center;position:relative;padding:4px;border-radius:4px" onmouseenter="this.style.color='#fff'" onmouseleave="this.style.color='rgba(232,231,227,0.7)'">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span id="adminBellBadge" style="display:none;position:absolute;top:-2px;right:-2px;min-width:14px;height:14px;background:var(--red);color:#fff;border-radius:999px;font-size:8px;font-weight:700;align-items:center;justify-content:center;padding:0 2px">0</span>
+          </button>
+          <div class="bell-dropdown" id="adminBellDropdown">
+            <div style="background:var(--navy);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;font-weight:800;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em">Уведомления</span>
+              <button onclick="markAdminNotifsRead()" style="font-size:11px;color:rgba(232,231,227,.6);background:none;border:none;cursor:pointer">Прочитать все</button>
+            </div>
+            <div id="adminBellList" style="overflow-y:auto;max-height:400px"></div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="content">
@@ -228,7 +259,7 @@ tbody tr:hover td{background:#f5f4f0;cursor:pointer}
         </div>
         <div class="cc" style="margin-bottom:14px"><div class="ct">Активность по дням</div><canvas id="cAct" height="70"></canvas></div>
         <div class="card">
-          <div class="ch"><div class="ct2">Последние заявки</div><button class="btn bsm" onclick="showPage('requests')" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25)">Все →</button></div>
+          <div class="ch"><div class="ct2">Последние заявки</div><button class="btn bsm" onclick="showPage('requests')" data-page="requests" style="background:rgba(255,255,255,0.15);color:#e8e7e3;border:1px solid rgba(255,255,255,0.25)">Все →</button></div>
           <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Автор</th><th>Участок</th><th>Описание</th><th>Статус</th><th>Дата</th></tr></thead><tbody id="recentReqs"></tbody></table></div>
         </div>
       </div>
@@ -363,6 +394,15 @@ tbody tr:hover td{background:#f5f4f0;cursor:pointer}
           <div><label class="lbl">Категория</label><select class="inp" id="nCat"><option value="announcement">📢 Объявление</option><option value="achievement">🏆 Достижение</option><option value="safety">🛡️ Безопасность</option><option value="general">📌 Общее</option></select></div>
           <div><label class="lbl">Источник</label><input class="inp" id="nSrc"></div>
         </div>
+        <div><label class="lbl">Рассылка кому</label>
+          <select class="inp" id="nTarget" onchange="toggleNewsTarget()">
+            <option value="all">📢 Всем сотрудникам</option>
+            <option value="dept">📍 По участку</option>
+            <option value="role">👥 По роли</option>
+          </select>
+        </div>
+        <div id="nTargetDeptRow" style="display:none"><label class="lbl">Участок</label><select class="inp" id="nTargetDept"></select></div>
+        <div id="nTargetRoleRow" style="display:none"><label class="lbl">Роль</label><select class="inp" id="nTargetRole"><option value="admin">Администраторы</option><option value="manager">Менеджеры</option><option value="engineer">Инженеры</option><option value="master">Мастера</option><option value="staff">Сотрудники</option></select></div>
       </div>
     </div>
     <div class="mf"><button class="btn bg" onclick="closeModal('newsModal')">Отмена</button><button class="btn bp" onclick="saveNews()">Сохранить</button></div>
@@ -520,6 +560,204 @@ document.getElementById('authForm').addEventListener('submit', async e => {
     .on('postgres_changes',{event:'*',schema:'public',table:'users'},()=>loadUsers())
     .subscribe();
 });
+
+// ── SIDEBAR TOGGLE ────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-hidden');
+  store.set('sb_hidden', document.body.classList.contains('sidebar-hidden') ? '1' : '0');
+}
+
+// ── ROLE-BASED TAB VISIBILITY ─────────────────────────────────────────────
+const ADMIN_ONLY_PAGES = ['users','departments','roles','achievements','shop'];
+
+function applyRoleVisibility() {
+  if (!adminUser) return;
+  const role = adminUser.role || 'staff';
+  if (role === 'admin') return; // admin sees everything
+  // Hide restricted nav items
+  document.querySelectorAll('.ni[data-page]').forEach(btn => {
+    const page = btn.getAttribute('data-page');
+    if (ADMIN_ONLY_PAGES.includes(page)) btn.style.display = 'none';
+  });
+}
+
+// ── BELL / NOTIFICATIONS ──────────────────────────────────────────────────
+let adminBellOpen = false;
+
+function toggleAdminBell() {
+  adminBellOpen = !adminBellOpen;
+  const dd = document.getElementById('adminBellDropdown');
+  if (!dd) return;
+  dd.classList.toggle('open', adminBellOpen);
+  if (adminBellOpen) {
+    loadAdminBellNotifs();
+    setTimeout(() => document.addEventListener('click', closeAdminBellOutside, {once:true}), 10);
+  }
+}
+
+function closeAdminBellOutside(e) {
+  if (!document.getElementById('adminBellDropdown')?.contains(e.target) && e.target.id !== 'adminBellBtn') {
+    adminBellOpen = false;
+    document.getElementById('adminBellDropdown')?.classList.remove('open');
+  }
+}
+
+async function loadAdminBellNotifs() {
+  if (!adminUser) return;
+  const list = document.getElementById('adminBellList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--t3);font-size:12px">Загрузка…</div>';
+  try {
+    const { data } = await SB.from('notifications')
+      .select('*').eq('user_id', adminUser.id)
+      .order('date',{ascending:false}).limit(20);
+    if (!data?.length) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:12px">Нет уведомлений</div>'; return; }
+    const icons = {welcome:'👋',new_request:'📋',status_update:'🔄',info:'ℹ️',achievement:'🏅',comment:'💬',news:'📰'};
+    list.innerHTML = data.map(n => `
+      <div class="bell-notif ${n.read?'':'unread'}" onclick="adminBellClick('${n.post_id||''}')">
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <span style="font-size:15px;flex-shrink:0">${icons[n.type]||'🔔'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;color:var(--t1)">${n.title||''}</div>
+            <div style="font-size:11px;color:var(--t3);margin-top:2px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${n.message||''}</div>
+            <div style="font-size:10px;color:var(--t4);margin-top:3px">${n.date?new Date(n.date).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</div>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--t3);font-size:11px">Ошибка</div>'; }
+}
+
+function adminBellClick(postId) {
+  adminBellOpen = false;
+  document.getElementById('adminBellDropdown')?.classList.remove('open');
+  if (postId && postId !== 'null' && postId !== '') {
+    showPage('requests');
+    setTimeout(() => openReqModal(parseInt(postId)), 300);
+  }
+}
+
+async function markAdminNotifsRead() {
+  if (!adminUser) return;
+  await SB.from('notifications').update({read:true}).eq('user_id', adminUser.id).eq('read',false);
+  loadAdminBellBadge();
+  loadAdminBellNotifs();
+}
+
+async function loadAdminBellBadge() {
+  if (!adminUser) return;
+  try {
+    const { count } = await SB.from('notifications').select('*',{count:'exact',head:true}).eq('user_id', adminUser.id).eq('read',false);
+    const badge = document.getElementById('adminBellBadge');
+    if (!badge) return;
+    if (count > 0) { badge.style.display='flex'; badge.textContent = count > 9 ? '9+' : count; }
+    else { badge.style.display='none'; }
+  } catch(e) {}
+}
+
+function setupAdminRealtime() {
+  if (window._adminRtSetup) return;
+  window._adminRtSetup = true;
+  SB.channel('admin-rt')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'requests'}, p => {
+      allReqs.unshift(p.new);
+      filterReqs(); renderDash();
+      const nb = document.getElementById('nbReq');
+      if (nb) nb.textContent = allReqs.filter(r=>r.status==='new').length;
+      // Push notification to self if admin
+      loadAdminBellBadge();
+    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'requests'}, p => {
+      const i = allReqs.findIndex(x=>x.id===p.new.id);
+      if (i>=0) { allReqs[i]={...allReqs[i],...p.new}; filterReqs(); renderDash(); }
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`user_id=eq.${adminUser?.id}`}, p => {
+      loadAdminBellBadge();
+    })
+    .subscribe();
+}
+
+// ── EXCEL EXPORT ──────────────────────────────────────────────────────────
+function exportToExcel() {
+  const STA = {new:'Новая',work:'В работе',approved:'Принята',rejected:'Отклонена',completed:'Выполнена'};
+  const data = allReqs.map(r => ({
+    'ID': r.id,
+    'Тип': r.type === 'idea' ? 'Идея' : 'Риск',
+    'Автор': r.anonymous ? 'Аноним' : (r.author || '—'),
+    'Участок': r.location || '—',
+    'Описание': r.description || '—',
+    'Статус': STA[r.status] || r.status,
+    'Ответственный': r.assigned_to || '—',
+    'Дедлайн': r.deadline ? r.deadline.slice(0,10) : '—',
+    'Срочность': r.risk_urgency ? `Уровень ${r.risk_urgency}` : '—',
+    'Дата создания': (r.date || r.created_at || '').slice(0,10),
+    'Комментариев': (() => { try { const c = Array.isArray(r.comments) ? r.comments : JSON.parse(r.comments||'[]'); return c.length; } catch { return 0; } })()
+  }));
+  if (!data.length) { toast('Нет данных для экспорта', 'info'); return; }
+  try {
+    const ws = XLSX.utils.json_to_sheet(data);
+    // Auto column width
+    const cols = Object.keys(data[0]);
+    ws['!cols'] = cols.map(k => ({wch: Math.max(k.length, ...data.map(r => String(r[k]||'').length)) + 2}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Заявки');
+    const date = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `akkermann_requests_${date}.xlsx`);
+    toast('✅ Файл Excel скачан');
+  } catch(e) { toast('Ошибка экспорта: '+e.message, 'err'); }
+}
+
+// ── NEWS BROADCAST ────────────────────────────────────────────────────────
+function toggleNewsTarget() {
+  const v = document.getElementById('nTarget')?.value;
+  const dRow = document.getElementById('nTargetDeptRow');
+  const rRow = document.getElementById('nTargetRoleRow');
+  if (dRow) dRow.style.display = v === 'dept' ? 'block' : 'none';
+  if (rRow) rRow.style.display = v === 'role' ? 'block' : 'none';
+  // Populate dept options
+  if (v === 'dept') {
+    const sel = document.getElementById('nTargetDept');
+    if (sel) sel.innerHTML = allDepts.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+  }
+}
+
+// ── WRAP saveNews to add broadcast ───────────────────────────────────────
+const _origSaveNews = saveNews;
+async function saveNews() {
+  // Get broadcast params before saving
+  const target = document.getElementById('nTarget')?.value || 'all';
+  const targetDept = document.getElementById('nTargetDept')?.value || '';
+  const targetRole = document.getElementById('nTargetRole')?.value || '';
+  const title = document.getElementById('nTitle')?.value || '';
+  const body = document.getElementById('nContent')?.value || '';
+  // Save news first (original function)
+  await _origSaveNews();
+  // Broadcast notifications
+  try {
+    let targetUsers = [];
+    if (target === 'all') {
+      const { data } = await SB.from('users').select('id').neq('id', adminUser?.id);
+      targetUsers = data || [];
+    } else if (target === 'dept' && targetDept) {
+      const { data } = await SB.from('users').select('id').eq('department', targetDept).neq('id', adminUser?.id);
+      targetUsers = data || [];
+    } else if (target === 'role' && targetRole) {
+      const { data } = await SB.from('users').select('id').eq('role', targetRole).neq('id', adminUser?.id);
+      targetUsers = data || [];
+    }
+    let sent = 0;
+    for (const u of targetUsers) {
+      try {
+        await SB.from('notifications').insert({
+          user_id: u.id, title: `📰 ${title}`, message: body.substring(0,120),
+          type: 'news', read: false, date: new Date().toISOString()
+        });
+        sent++;
+      } catch(e) {}
+    }
+    if (sent > 0) toast(`✅ Разослано ${sent} уведомлений`);
+  } catch(ex) { console.warn('news broadcast error:', ex); }
+}
+
 function adminLogout(){if(!confirm('Выйти?'))return;clearSession();document.getElementById('adminApp').style.display='none';document.getElementById('authScreen').style.display='flex';adminUser=null;}
 
 // ── NAVIGATION ────────────────────────────────────────────────────
@@ -545,6 +783,9 @@ function showPage(id){
 }
 
 // ── REFRESH ALL ───────────────────────────────────────────────────
+function store() { return { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k,v) => { try { sessionStorage.setItem(k,v); } catch {} } }; }
+const store = (() => { const s = {}; return { get: k => { try { return sessionStorage.getItem(k); } catch { return s[k]||null; } }, set: (k,v) => { try { sessionStorage.setItem(k,v); } catch { s[k]=v; } } }; })();
+
 async function refreshAll(){
   document.getElementById('lastUpd').textContent='Обновлено: '+new Date().toLocaleTimeString('ru');
   await Promise.all([loadReqs(),loadUsers(),loadDeptsData()]);
@@ -992,7 +1233,7 @@ async function saveNews(){const id=document.getElementById('nId').value;const ca
 async function delNews(id){if(!confirm('Удалить?'))return;await SB.from('news').delete().eq('id',id);toast('Удалено','info');loadNewsPage();}
 
 // ── ACHIEVEMENTS ───────────────────────────────────────────────────
-async function loadAchPage(){const{data}=await SB.from('achievements').select('*');const g=document.getElementById('achGrid');if(!g)return;g.innerHTML=(data||[]).map(a=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${a.icon}</div><div style="font-size:13px;font-weight:700">${a.title}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${a.description||a.desc||''}</div><div style="display:flex;justify-content:center;gap:5px;margin-top:7px"><span class="b" style="background:rgba(245,61,45,.1);color:var(--acc)">${a.target_type||''} ≥ ${a.target}</span><span class="b" style="background:rgba(251,191,36,.1);color:#78350f">+${a.points}б</span></div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editAch('${a.id}')">✏️</button><button class="btn bd bsm" onclick="delAch('${a.id}')">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Достижений нет</div>';}
+async function loadAchPage(){const{data}=await SB.from('achievements').select('*');const g=document.getElementById('achGrid');if(!g)return;g.innerHTML=(data||[]).map(a=>`<div class="card" style="padding:13px;text-align:center;border-radius:12px"><div style="font-size:30px;margin-bottom:5px">${a.icon}</div><div style="font-size:13px;font-weight:700">${a.title}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${a.description||a.desc||''}</div><div style="display:flex;justify-content:center;gap:5px;margin-top:7px"><span class="b" style="background:rgba(245,61,45,.1);color:var(--acc)">${a.target_type||''} ≥ ${a.target}</span><span class="b" style="background:rgba(251,191,36,.1);color:#78350f">+${a.points} ТОП</span></div><div style="display:flex;gap:5px;justify-content:center;margin-top:9px"><button class="btn bg bsm" onclick="editAch('${a.id}')">✏️</button><button class="btn bd bsm" onclick="delAch('${a.id}')">🗑️</button></div></div>`).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--t3)">Достижений нет</div>';}
 function openAchModal(){document.getElementById('aId').value='';document.getElementById('aIcon').value='🏆';document.getElementById('aTitle').value='';document.getElementById('aDesc').value='';document.getElementById('aTarget').value='1';document.getElementById('aPoints').value='10';openModal('achModal');}
 async function editAch(id){const{data}=await SB.from('achievements').select('*').eq('id',id).single();if(!data)return;document.getElementById('aId').value=id;document.getElementById('aIcon').value=data.icon||'🏆';document.getElementById('aTitle').value=data.title||'';document.getElementById('aDesc').value=data.description||data.desc||'';document.getElementById('aTType').value=data.target_type||'posts';document.getElementById('aTarget').value=data.target||1;document.getElementById('aPoints').value=data.points||10;openModal('achModal');}
 async function saveAch(){const id=document.getElementById('aId').value;const rec={icon:document.getElementById('aIcon').value,title:document.getElementById('aTitle').value,description:document.getElementById('aDesc').value,target_type:document.getElementById('aTType').value,target:parseInt(document.getElementById('aTarget').value),points:parseInt(document.getElementById('aPoints').value)};let err;if(id){({error:err}=await SB.from('achievements').update(rec).eq('id',id));}else{({error:err}=await SB.from('achievements').insert(rec));}if(err){toast('Ошибка: '+err.message,'err');return;}toast(id?'Обновлено':'Создано ✅');closeModal('achModal');loadAchPage();}
