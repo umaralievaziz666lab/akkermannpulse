@@ -77,7 +77,7 @@ body{margin:0;font-family:'Barlow',system-ui,-apple-system,sans-serif;background
 .nav-badge{position:absolute;top:6px;right:6px;min-width:16px;height:16px;background:var(--red);color:#fff;border-radius:999px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px;border:1px solid rgba(255,255,255,0.3)}
 
 /* ── SECTIONS ────────────────────────────── */
-.section{display:none;min-height:100%;padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+.section{display:none;min-height:100%;padding-bottom:calc(74px + env(safe-area-inset-bottom,0px));padding-top:8px}
 .section.active{display:block}
 /* Loading skeleton */
 .loading-dots{display:flex;justify-content:center;align-items:center;gap:8px;padding:60px 20px}
@@ -115,8 +115,10 @@ body{margin:0;font-family:'Barlow',system-ui,-apple-system,sans-serif;background
 .collapse-header.open .collapse-arrow{transform:rotate(180deg)}
 
 /* ── MODALS ──────────────────────────────── */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:16px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:flex-end;justify-content:center;padding:0}
 .modal-bg.open{display:flex}
+.modal-box{border-radius:16px 16px 0 0!important;max-height:92vh;width:100%!important;max-width:100%!important;animation:slideUp .25s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-box{background:var(--bg2);border-radius:6px;width:100%;max-width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);border-top:3px solid var(--red)}
 .modal-head{padding:14px 16px;border-bottom:2px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--navy);flex-shrink:0}
 .modal-body{overflow-y:auto;flex:1;padding:16px}
@@ -210,13 +212,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
  <div id="appScroll">
   <!-- HEADER -->
   <div id="appHeader">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px">
-      <div class="header-title" style="color:#e8e7e3;flex:1;text-align:center">AKKERMANN PULSE</div>
-      <button id="bellBtn" onclick="toggleBell()" style="position:relative;background:none;border:none;color:rgba(232,231,227,0.7);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-        <span id="bellBadge" style="display:none;position:absolute;top:0;right:0;min-width:14px;height:14px;background:var(--red);color:#fff;border-radius:999px;font-size:8px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 2px;border:1px solid rgba(255,255,255,.3)">0</span>
-      </button>
-    </div>
+    <div class="header-title" style="color:#e8e7e3">AKKERMANN PULSE</div>
     <div class="feed-tabs" id="feedTabs">
       <button class="feed-tab active" data-tab="all" onclick="switchTab('all')">Общая лента</button>
       <button class="feed-tab" data-tab="my" onclick="switchTab('my')">Мои заявки</button>
@@ -258,7 +254,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
     </div>
   </div>
 
-  <div id="secNotif" class="section" style="padding:16px;padding-top:20px">
+  <div id="secNotif" class="section" style="padding:16px;padding-top:16px">
     <!-- Main notif view -->
     <div id="notifMain">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -281,7 +277,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
     </div>
   </div>
 
-  <div id="secNews" class="section" style="padding:16px;padding-top:20px">
+  <div id="secNews" class="section" style="padding:16px;padding-top:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:17px;font-weight:700;color:var(--t1)">Новости</div>
       <button id="addNewsBtn" onclick="openModal('newsModal')" style="display:none;font-size:12px;background:var(--acc);color:#fff;border:none;border-radius:8px;padding:5px 10px;cursor:pointer">+ Добавить</button>
@@ -337,7 +333,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
       <div style="height:6px;border-radius:999px;background:var(--bd);margin-top:10px;overflow:hidden">
         <div id="pBar" style="height:100%;border-radius:999px;width:0%;background:var(--red);transition:width .6s"></div>
       </div>
-      <div style="font-size:11px;color:var(--t3);text-align:right;margin-top:4px">до следующего: <span id="pToNext">100</span> б.</div>
+      <div style="font-size:11px;color:var(--t3);text-align:right;margin-top:4px">до следующего: <span id="pToNext">100</span> ТОП</div>
     </div>
     <!-- stats — clickable (п.8) -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 8px 8px">
@@ -389,6 +385,87 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
     <div class="collapse-body" id="shop-body">
       <div style="padding:8px"><div id="shopList" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div></div>
     </div>
+    <!-- SLA system info -->
+    <div class="collapse-header" onclick="toggleCollapse('sla')" style="background:var(--navy);">
+      <span style="font-size:14px;font-weight:700;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em">⏱️ SLA — ВРЕМЯ РЕАКЦИИ</span>
+      <svg class="collapse-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+    <div class="collapse-body" id="sla-body">
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:4px">
+          SLA (Service Level Agreement) — это максимальное время, за которое ответственный должен отреагировать на заявку. Отсчёт начинается с момента подачи заявки.
+        </div>
+        <!-- Level 1 -->
+        <div style="border-radius:8px;border:1.5px solid rgba(239,68,68,.4);background:rgba(239,68,68,.06);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">🔴</span>
+            <div style="font-size:13px;font-weight:800;color:#dc2626">Уровень 1 — ОПАСНО СЕЙЧАС</div>
+          </div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Угроза немедленной травмы или аварии. Требует остановки работ.</div>
+          <div style="margin-top:8px;background:rgba(239,68,68,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase">Время реакции</span>
+            <span style="font-size:16px;font-weight:800;color:#dc2626">≤ 2 часа</span>
+          </div>
+          <div style="margin-top:6px;background:rgba(239,68,68,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase">Устранение</span>
+            <span style="font-size:16px;font-weight:800;color:#dc2626">≤ 24 часа</span>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--t3)">Бонус за подачу: <strong style="color:var(--acc)">+15 ТОП</strong></div>
+        </div>
+        <!-- Level 2 -->
+        <div style="border-radius:8px;border:1.5px solid rgba(245,158,11,.4);background:rgba(245,158,11,.06);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">🟡</span>
+            <div style="font-size:13px;font-weight:800;color:#d97706">Уровень 2 — МОЖЕТ ПРИВЕСТИ К ТРАВМЕ</div>
+          </div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Потенциально опасная ситуация, требует планового устранения.</div>
+          <div style="margin-top:8px;background:rgba(245,158,11,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase">Время реакции</span>
+            <span style="font-size:16px;font-weight:800;color:#d97706">≤ 1 рабочий день</span>
+          </div>
+          <div style="margin-top:6px;background:rgba(245,158,11,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase">Устранение</span>
+            <span style="font-size:16px;font-weight:800;color:#d97706">≤ 3 рабочих дня</span>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--t3)">Бонус за подачу: <strong style="color:var(--acc)">+12 ТОП</strong></div>
+        </div>
+        <!-- Level 3 -->
+        <div style="border-radius:8px;border:1.5px solid rgba(16,185,129,.4);background:rgba(16,185,129,.06);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">🟢</span>
+            <div style="font-size:13px;font-weight:800;color:#059669">Уровень 3 — ЗАМЕЧАНИЕ / УЛУЧШЕНИЕ</div>
+          </div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Незначительный риск или предложение по улучшению условий труда.</div>
+          <div style="margin-top:8px;background:rgba(16,185,129,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase">Время реакции</span>
+            <span style="font-size:16px;font-weight:800;color:#059669">≤ 2 рабочих дня</span>
+          </div>
+          <div style="margin-top:6px;background:rgba(16,185,129,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase">Устранение</span>
+            <span style="font-size:16px;font-weight:800;color:#059669">≤ 7 рабочих дней</span>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--t3)">Бонус за подачу: <strong style="color:var(--acc)">+10 ТОП</strong></div>
+        </div>
+        <!-- Ideas -->
+        <div style="border-radius:8px;border:1.5px solid rgba(59,130,246,.3);background:rgba(59,130,246,.05);padding:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:20px">💡</span>
+            <div style="font-size:13px;font-weight:800;color:#2563eb">Идея / Предложение</div>
+          </div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6">Предложение по улучшению процессов, условий или оборудования.</div>
+          <div style="margin-top:8px;background:rgba(59,130,246,.1);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:#2563eb;text-transform:uppercase">Рассмотрение</span>
+            <span style="font-size:16px;font-weight:800;color:#2563eb">≤ 5 рабочих дней</span>
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:var(--t3)">Бонус за подачу: <strong style="color:var(--acc)">+5 ТОП</strong></div>
+        </div>
+        <!-- SLA timer display -->
+        <div id="mySlaStatus" style="background:var(--bg3);border-radius:8px;padding:12px;border:1px solid var(--bd)">
+          <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px">📊 Мои активные заявки</div>
+          <div id="mySlaList" style="font-size:12px;color:var(--t3)">Загрузка…</div>
+        </div>
+      </div>
+    </div>
     <!-- training -->
     <div class="collapse-header" onclick="toggleCollapse('training')" style="background:var(--navy);">
       <span style="font-size:14px;font-weight:700;color:#e8e7e3;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em">🎓 ОБУЧЕНИЕ</span>
@@ -398,7 +475,7 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
       <div style="padding:12px 16px">
         <div style="background:#eff6ff;border-left:4px solid #3b82f6;border-radius:8px;padding:12px;margin-bottom:12px">
           <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:4px">📚 Пройдите обучение!</div>
-          <div style="font-size:12px;color:#3b82f6">Завершите видеоурок и тест — получите достижение и баллы.</div>
+          <div style="font-size:12px;color:#3b82f6">Завершите видеоурок и тест — получите достижение и ТОП.</div>
         </div>
         <div id="trainingStatus" style="display:none;text-align:center;color:#16a34a;font-size:13px;font-weight:700;margin-bottom:10px">✅ Обучение успешно завершено!</div>
         <div style="background:var(--bg3);border-radius:12px;overflow:hidden;position:relative;padding-top:56.25%">
@@ -683,17 +760,6 @@ label.lbl{display:block;font-size:11px;font-weight:700;color:var(--t3);text-tran
 
  </div><!-- /appScroll -->
 </div><!-- /app -->
-
-
-  <!-- NOTIFICATION BELL DROPDOWN -->
-  <div id="bellDropdown" style="display:none;position:fixed;top:0;right:0;width:320px;max-height:480px;background:var(--bg2);border-radius:0 0 0 12px;box-shadow:-4px 4px 20px rgba(0,0,0,.3);z-index:200;overflow:hidden;border-left:1px solid var(--bd);border-bottom:1px solid var(--bd);border-bottom-left-radius:12px;">
-    <div style="background:var(--navy);padding:12px 16px;border-bottom:2px solid var(--red);display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.05em">Уведомления</span>
-      <button onclick="closeBell()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:18px;cursor:pointer;line-height:1">&times;</button>
-    </div>
-    <div id="bellList" style="overflow-y:auto;max-height:380px;padding:8px"></div>
-  </div>
-
 <!-- GALLERY -->
 <div id="gallery" onclick="closeGallery()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:200;align-items:center;justify-content:center"></div>
 
@@ -740,7 +806,7 @@ let locFilter = 'all';
 let isDark = store.get('dark') === '1';
 let likedPosts = new Set(); // пункт 3: которые я лайкнул
 let pageOffset = 0;         // пункт 1: пагинация
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 8;
 let isLoadingMore = false;
 let hasMorePosts = true;
 
@@ -817,7 +883,7 @@ async function bumpTask(type) {
     await SB.from('users').update({points: user.points}).eq('id', user.empId);
     store.set('u', JSON.stringify(user));
     updateProfileUI();
-    await pushNotif(user.empId, '⚡ Задание выполнено!', `«${t.txt}» +${t.pts} баллов`);
+    await pushNotif(user.empId, '⚡ Задание выполнено!', `«${t.txt}» +${t.pts} ТОП`);
   }
   renderDaily();
 }
@@ -994,7 +1060,7 @@ function insertMentionFromProfile(name) {
 }
 
 // ── REFERRAL SYSTEM ───────────────────────────────────────────────────────
-const REFERRAL_BONUS = 50; // баллов за приглашённого
+const REFERRAL_BONUS = 50; // ТОП за приглашённого
 
 function openReferralModal() {
   const body = document.getElementById('referralBody');
@@ -1004,9 +1070,9 @@ function openReferralModal() {
   body.innerHTML = `
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:40px;margin-bottom:8px">🎁</div>
-      <div style="font-size:16px;font-weight:700;color:var(--t1)">Пригласи коллегу — получи баллы!</div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1)">Пригласи коллегу — получи ТОП!</div>
       <div style="font-size:13px;color:var(--t3);margin-top:6px;line-height:1.5">
-        За каждого коллегу который зарегистрируется по твоему коду — ты получаешь <strong style="color:var(--acc)">${REFERRAL_BONUS} баллов</strong>
+        За каждого коллегу который зарегистрируется по твоему коду — ты получаешь <strong style="color:var(--acc)">${REFERRAL_BONUS} ТОП</strong>
       </div>
     </div>
     <div style="background:var(--bg3);border-radius:14px;padding:16px;margin-bottom:16px">
@@ -1020,11 +1086,11 @@ function openReferralModal() {
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--t1)">Приглашено коллег</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px">Заработано баллов</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">Заработано ТОП</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:22px;font-weight:800;color:var(--t1)">${myReferrals.length}</div>
-          <div style="font-size:14px;font-weight:700;color:var(--acc)">+${earned} б.</div>
+          <div style="font-size:14px;font-weight:700;color:var(--acc)">+${earned} ТОП</div>
         </div>
       </div>
     </div>
@@ -1033,7 +1099,7 @@ function openReferralModal() {
       1. Скопируй свой код<br>
       2. Отправь коллеге<br>
       3. Коллега вводит код при регистрации<br>
-      4. Ты получаешь ${REFERRAL_BONUS} баллов автоматически!
+      4. Ты получаешь ${REFERRAL_BONUS} ТОП автоматически!
     </div>`;
   openModal('referralModal');
 }
@@ -1145,10 +1211,20 @@ function toggleDark() {
 
 // ── MODALS ────────────────────────────────────────────────────────────────
 function openModal(id) {
-  document.getElementById(id).classList.add('open');
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('open');
   if (id === 'levelsModal') renderLevelsModal();
+  // Close on backdrop click
+  el._backdropHandler = e => { if (e.target === el) closeModal(id); };
+  el.addEventListener('click', el._backdropHandler);
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('open');
+  if (el._backdropHandler) { el.removeEventListener('click', el._backdropHandler); delete el._backdropHandler; }
+}
 
 function renderLevelsModal() {
   const pts = user?.points || 0;
@@ -1161,7 +1237,7 @@ function renderLevelsModal() {
       <div style="font-size:20px;width:28px;text-align:center">${achieved?'✅':isCurrent?'👆':'🔒'}</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700;color:${isCurrent?'var(--acc)':'var(--t1)'}">${l.label} <span style="font-size:11px;font-weight:400;color:var(--t3)">(Уровень ${i+1})</span></div>
-        <div style="font-size:11px;color:var(--t3);margin-top:1px">${l.min === 0 ? '0' : l.min.toLocaleString()} — ${l.max === Infinity ? '∞' : l.max.toLocaleString()} баллов</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:1px">${l.min === 0 ? '0' : l.min.toLocaleString()} — ${l.max === Infinity ? '∞' : l.max.toLocaleString()} ТОП</div>
       </div>
       ${isCurrent ? `<span style="font-size:10px;font-weight:700;color:var(--acc);background:rgba(102,126,234,.12);padding:2px 8px;border-radius:999px">Вы здесь</span>` : ''}
     </div>`;
@@ -1201,6 +1277,7 @@ function showSec(s) {
   const scroller = document.getElementById('appScroll');
   if (scroller) scroller.scrollTop = 0;
   if (s === 'notif') loadNotifs();
+  if (s === 'profile') { renderLb(); renderAch(); renderShop(); renderDaily(); renderSlaStatus(); }
   if (s === 'news') loadNews();
   if (s === 'profile') { updateProfileUI(); renderLb(); renderAch(); renderShop(); renderDaily(); }
   if (tg && tg.BackButton && tg.version && parseFloat(tg.version) >= 6.1) { s==='feed' ? tg.BackButton.hide() : tg.BackButton.show(); }
@@ -1241,6 +1318,17 @@ function toggleExtraFilter() {
 
 // ── PUSH NOTIFICATIONS ────────────────────────────────────────────────────
 async function pushNotif(userId, title, message, postId=null, type='info') {
+  // Also send Telegram message via Edge Function
+  try {
+    await fetch(`https://krrknpunzekogsbtjsll.supabase.co/functions/v1/send-telegram`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtycmtucHVuemVrb2dzYnRqc2xsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjA3MTAsImV4cCI6MjA5MTYzNjcxMH0.-2TGWk1VE9mVah3uW30Ea-OBlY9yixoSj38nFv6oytA'
+      },
+      body: JSON.stringify({ user_id: userId, title, message })
+    });
+  } catch(e) { /* silent — TG not critical */ }
   try {
     await SB.from('notifications').insert({
       user_id: userId, title, message, type,
@@ -1403,7 +1491,7 @@ async function loadPosts(reset=true) {
     try {
       const result = await Promise.race([
         SB.from('requests')
-          .select('id,type,description,author,author_id,location,date,created_at,status,likes,comments,media,risk_urgency,risk_event_type,anonymous,assigned_to,admin_comment')
+          .select('id,type,description,author,author_id,location,date,created_at,status,likes,comments,media,risk_urgency,risk_event_type,anonymous,assigned_to,admin_comment,completion_media,change_log,deadline')
           .order('id', {ascending: false})
           .range(pageOffset, pageOffset + PAGE_SIZE - 1),
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
@@ -1922,7 +2010,7 @@ document.getElementById('createForm').addEventListener('submit', async e => {
   // TZ: 5pts base for any submission, +extra for risks
   const riskBonus = type==='risk' ? (()=>{ const urgR=document.querySelector('input[name="cUrgencyR"]:checked'); return urgR&&parseInt(urgR.value)===1?10:urgR&&parseInt(urgR.value)===2?7:5; })() : 0;
   user.points += 5 + riskBonus;
-  if(riskBonus>0) showToast(`+${5+riskBonus} ТОП баллов за риск!`);
+  if(riskBonus>0) showToast(`+${5+riskBonus} ТОП за риск!`);
   SB.from('users').update({points: user.points}).eq('id', user.empId);
   store.set('u', JSON.stringify(user));
   updateProfileUI();
@@ -2093,7 +2181,7 @@ async function renderShop() {
     return `<div style="border-radius:12px;border:1px solid var(--bd);background:var(--bg3);padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="font-size:28px">${item.icon}</div>
       <div style="font-size:12px;font-weight:700;color:var(--t1);text-align:center">${item.title}</div>
-      <div style="font-size:12px;font-weight:700;color:${can?'#059669':'var(--acc)'}">${item.points} б.</div>
+      <div style="font-size:12px;font-weight:700;color:${can?'#059669':'var(--acc)'}">${item.points} ТОП</div>
       <button onclick="buyItem(${item.id})" ${!can?'disabled':''} style="width:100%;padding:6px;border-radius:8px;border:none;background:${can?'#3b82f6':'var(--bd)'};color:${can?'#fff':'var(--t4)'};font-size:12px;font-weight:700;cursor:${can?'pointer':'default'}">Купить</button>
     </div>`;
   }).join('');
@@ -2102,7 +2190,7 @@ async function renderShop() {
 async function buyItem(id) {
   const item = shopData.find(i => i.id === id);
   if (!item || user.points < item.points) return;
-  if (!confirm(`Купить «${item.title}» за ${item.points} баллов?`)) return;
+  if (!confirm(`Купить «${item.title}» за ${item.points} ТОП?`)) return;
   user.points -= item.points;
   await SB.from('users').update({points: user.points}).eq('id', user.empId);
   await SB.from('purchases').insert({user_id: user.empId, item_id: item.id, date: new Date().toISOString()});
@@ -2111,6 +2199,34 @@ async function buyItem(id) {
 }
 
 // ── PROFILE UI ────────────────────────────────────────────────────────────
+
+// ── SLA STATUS ────────────────────────────────────────────────────────────
+function renderSlaStatus() {
+  const el = document.getElementById('mySlaList');
+  if (!el) return;
+  const myPosts = posts.filter(p => (p.author_id === user?.empId || p.author === user?.name) && ['new','work'].includes(p.status));
+  if (!myPosts.length) { el.innerHTML = '<span style="color:var(--t3)">Нет активных заявок</span>'; return; }
+  const SLA_H = {1:2, 2:24, 3:48}; // hours to react
+  const now = Date.now();
+  el.innerHTML = myPosts.slice(0,5).map(p => {
+    const created = new Date(p.date || p.created_at).getTime();
+    const slaH = p.risk_urgency ? SLA_H[p.risk_urgency] : 120;
+    const elapsed = (now - created) / 3600000;
+    const pct = Math.min(100, Math.round(elapsed / slaH * 100));
+    const over = elapsed > slaH;
+    const color = over ? '#dc2626' : pct > 75 ? '#d97706' : '#059669';
+    const label = p.risk_urgency ? ['','🔴','🟡','🟢'][p.risk_urgency] : '💡';
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <span style="font-size:11px;font-weight:600;color:var(--t1)">${label} ${pad(p.id)}</span>
+        <span style="font-size:10px;font-weight:700;color:${color}">${over ? '⚠️ SLA нарушен' : Math.round(elapsed)}ч / ${slaH}ч</span>
+      </div>
+      <div style="height:5px;border-radius:999px;background:var(--bd);overflow:hidden">
+        <div style="height:100%;border-radius:999px;background:${color};width:${pct}%;transition:width .5s"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
 function updateProfileUI() {
   if (!user) return;
 
@@ -2317,7 +2433,7 @@ document.getElementById('regForm').addEventListener('submit', async e => {
       await SB.from('users').update({ points: newPoints }).eq('id', referredBy);
       await SB.from('notifications').insert({
         user_id: referredBy, title: '🎁 Реферальный бонус!',
-        message: `По вашему коду зарегистрировался новый сотрудник. +${REFERRAL_BONUS} баллов!`,
+        message: `По вашему коду зарегистрировался новый сотрудник. +${REFERRAL_BONUS} ТОП!`,
         type: 'achievement', read: false, date: new Date().toISOString()
       });
     }
