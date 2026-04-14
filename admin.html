@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',system-ui,sans-serif;background:#e8e7e3;color:#0f1c2c;min-height:100vh}
@@ -317,7 +318,7 @@ body.sidebar-hidden .main{margin-left:0;transition:margin .25s}
           </select>
         </div>
         <div class="card">
-          <div class="ch"><div class="ct2">Заявки <span id="rqCount" style="font-weight:400;color:var(--t3)"></span></div></div>
+          <div class="ch"><div class="ct2">Заявки <span id="rqCount" style="font-weight:400;color:var(--t3)"></span></div><button class="btn bsm" onclick="exportToExcel()" style="background:rgba(16,185,129,.15);color:#059669;border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;gap:5px"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Скачать Excel</button></div>
           <div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Тип</th><th>Срочность</th><th>Автор</th><th>Участок</th><th>Медиа</th><th>Описание</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th></tr></thead><tbody id="rqTable"></tbody></table></div>
           <div id="rqPager" style="display:none;justify-content:center;align-items:center;gap:10px;padding:14px"><button class="btn bg bsm" id="rqPrevBtn" onclick="reqPage--;filterReqs()">← Назад</button><span id="rqPageInfo" style="font-size:12px;color:var(--t3)"></span><button class="btn bg bsm" id="rqNextBtn" onclick="reqPage++;filterReqs()">Вперёд →</button></div>
         </div>
@@ -1200,87 +1201,167 @@ function renderDeptComparison() {
 
 // ── PDF EXPORT ────────────────────────────────────────────────────────────
 async function exportDeptPDF() {
-  if (!window.jspdf) { toast('PDF библиотека загружается, подождите…','info'); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
   const r = getFR();
   const fromEl = document.getElementById('dateFrom')?.value;
   const toEl   = document.getElementById('dateTo')?.value;
   const period = (fromEl || toEl) ? `${fromEl||'начало'} — ${toEl||'сегодня'}` : 'Всё время';
   const now = new Date().toLocaleString('ru');
-  // Header
-  doc.setFillColor(15,28,44);
-  doc.rect(0,0,297,22,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(14); doc.setFont('helvetica','bold');
-  doc.text('AKKERMANN PULSE — Отчёт по участкам', 14, 10);
-  doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text(`Период: ${period}   |   Сформирован: ${now}   |   Всего заявок: ${r.length}`, 14, 18);
-  // Summary row
-  doc.setTextColor(15,28,44);
-  doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text('Сводная статистика', 14, 32);
-  const summaryData = [
-    ['Всего заявок','Новых','В работе','Выполнено','Идей','Рисков','Уровень 1'],
-    [r.length, r.filter(x=>x.status==='new').length, r.filter(x=>x.status==='work').length,
-     r.filter(x=>['completed','approved'].includes(x.status)).length,
-     r.filter(x=>x.type==='idea').length, r.filter(x=>x.type==='risk').length,
-     r.filter(x=>x.risk_urgency===1).length].map(String)
-  ];
-  doc.autoTable({startY:35,head:[summaryData[0]],body:[summaryData[1]],theme:'grid',
-    headStyles:{fillColor:[245,61,45],textColor:255,fontSize:8},
-    bodyStyles:{fontSize:10,fontStyle:'bold',halign:'center'},
-    columnStyles: Object.fromEntries(summaryData[0].map((_,i)=>([i,{halign:'center'}]))),
-    margin:{left:14,right:14}});
-  // Per dept table
+
+  // Build dept stats
   const depts = [...new Set(r.map(x=>x.location).filter(Boolean))].sort();
-  const deptRows = depts.map(d => {
+  const rows = depts.map(d => {
     const dr = r.filter(x=>x.location===d);
-    const done = dr.filter(x=>['completed','approved'].includes(x.status)).length;
-    return [d, dr.length, dr.filter(x=>x.type==='idea').length, dr.filter(x=>x.type==='risk').length,
-            dr.filter(x=>x.risk_urgency===1).length, done,
-            dr.length ? Math.round(done/dr.length*100)+'%' : '0%'];
-  }).sort((a,b)=>b[1]-a[1]);
-  const yAfterSummary = doc.lastAutoTable.finalY + 8;
-  doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text('Детализация по участкам', 14, yAfterSummary);
-  doc.autoTable({startY: yAfterSummary+3,
-    head:[['Участок','Всего','Идей','Рисков','Ур.1 🔴','Выполнено','Эффект.']],
-    body: deptRows, theme:'striped',
-    headStyles:{fillColor:[15,28,44],textColor:255,fontSize:9},
-    bodyStyles:{fontSize:9},
-    columnStyles:{0:{cellWidth:60},1:{halign:'center'},2:{halign:'center'},3:{halign:'center'},4:{halign:'center',textColor:[220,38,38],fontStyle:'bold'},5:{halign:'center'},6:{halign:'center'}},
-    margin:{left:14,right:14}});
-  // Recent level-1 risks
-  const lvl1 = r.filter(x=>x.risk_urgency===1 && x.type==='risk').slice(0,10);
-  if (lvl1.length) {
-    const y2 = doc.lastAutoTable.finalY + 8;
-    if (y2 < 185) {
-      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(220,38,38);
-      doc.text('🔴 Критические риски (Уровень 1)', 14, y2);
-      doc.setTextColor(15,28,44);
-      doc.autoTable({startY:y2+3,
-        head:[['ID','Участок','Описание','Статус','Ответственный']],
-        body:lvl1.map(x=>[pad(x.id),x.location||'—',(x.description||'').substring(0,50),
-          {new:'Новая',work:'В работе',approved:'Принята',completed:'Выполнена'}[x.status]||x.status,
-          x.assigned_to||'—']),
-        theme:'grid',
-        headStyles:{fillColor:[220,38,38],textColor:255,fontSize:8},
-        bodyStyles:{fontSize:8},
-        columnStyles:{2:{cellWidth:80}},
-        margin:{left:14,right:14}});
+    const ideas = dr.filter(x=>x.type==='idea').length;
+    const risks = dr.filter(x=>x.type==='risk').length;
+    const done  = dr.filter(x=>['completed','approved'].includes(x.status)).length;
+    const lvl1  = dr.filter(x=>x.risk_urgency===1).length;
+    const rate  = dr.length ? Math.round(done/dr.length*100) : 0;
+    return {d, total:dr.length, ideas, risks, done, lvl1, rate};
+  }).sort((a,b)=>b.total-a.total);
+
+  const lvl1Reqs = r.filter(x=>x.risk_urgency===1 && x.type==='risk').slice(0,10);
+
+  // Build HTML report in memory
+  const html = `
+  <div id="pdf-report" style="font-family:Arial,sans-serif;width:1050px;padding:0;background:#fff;color:#0f1c2c">
+    <!-- Header -->
+    <div style="background:#0f1c2c;padding:18px 24px 14px;border-bottom:4px solid #f53d2d">
+      <div style="font-size:18px;font-weight:700;color:#fff;letter-spacing:.05em">AKKERMANN PULSE — Отчёт по участкам</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:5px">Период: ${period} &nbsp;|&nbsp; Сформирован: ${now} &nbsp;|&nbsp; Всего заявок: ${r.length}</div>
+    </div>
+    <!-- Summary cards -->
+    <div style="padding:16px 24px;background:#f8f7f4;border-bottom:1px solid #e0deda">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;color:#5a7080">Сводная статистика</div>
+      <div style="display:flex;gap:10px">
+        ${[
+          ['Всего заявок', r.length, '#f53d2d'],
+          ['Новых', r.filter(x=>x.status==='new').length, '#f59e0b'],
+          ['В работе', r.filter(x=>x.status==='work').length, '#3b82f6'],
+          ['Выполнено', r.filter(x=>['completed','approved'].includes(x.status)).length, '#10b981'],
+          ['Идей', r.filter(x=>x.type==='idea').length, '#059669'],
+          ['Рисков', r.filter(x=>x.type==='risk').length, '#d97706'],
+          ['Уровень 1 🔴', r.filter(x=>x.risk_urgency===1).length, '#dc2626'],
+        ].map(([label,val,color])=>`
+          <div style="flex:1;background:#fff;border-radius:6px;border:1px solid #e0deda;border-top:3px solid ${color};padding:10px;text-align:center">
+            <div style="font-size:22px;font-weight:700;color:${color}">${val}</div>
+            <div style="font-size:10px;color:#5a7080;margin-top:2px">${label}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+    <!-- Dept table -->
+    <div style="padding:16px 24px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;color:#5a7080">Детализация по участкам</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#0f1c2c;color:#fff">
+            <th style="padding:8px 10px;text-align:left;border-right:1px solid rgba(255,255,255,.1)">Участок</th>
+            <th style="padding:8px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Всего</th>
+            <th style="padding:8px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Идей 💡</th>
+            <th style="padding:8px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Рисков ⚠️</th>
+            <th style="padding:8px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Ур.1 🔴</th>
+            <th style="padding:8px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.1)">Выполнено</th>
+            <th style="padding:8px 10px;text-align:center">Эффект.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row,i)=>`
+          <tr style="background:${i%2===0?'#fff':'#f8f7f4'};border-bottom:1px solid #e0deda">
+            <td style="padding:8px 10px;font-weight:600">${row.d}</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:#f53d2d">${row.total}</td>
+            <td style="padding:8px 10px;text-align:center">${row.ideas}</td>
+            <td style="padding:8px 10px;text-align:center">${row.risks}</td>
+            <td style="padding:8px 10px;text-align:center;font-weight:700;color:${row.lvl1>0?'#dc2626':'#5a7080'}">${row.lvl1||'—'}</td>
+            <td style="padding:8px 10px;text-align:center">${row.done}</td>
+            <td style="padding:8px 10px;text-align:center">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="flex:1;height:6px;border-radius:3px;background:#e0deda">
+                  <div style="height:100%;width:${row.rate}%;background:${row.rate>75?'#10b981':row.rate>40?'#f59e0b':'#ef4444'};border-radius:3px"></div>
+                </div>
+                <span style="font-size:11px;font-weight:700;min-width:32px;text-align:right">${row.rate}%</span>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${lvl1Reqs.length ? `
+    <!-- Critical risks -->
+    <div style="padding:0 24px 16px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;color:#dc2626">Критические риски — Уровень 1</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead>
+          <tr style="background:#dc2626;color:#fff">
+            <th style="padding:7px 10px;text-align:left">ID</th>
+            <th style="padding:7px 10px;text-align:left">Участок</th>
+            <th style="padding:7px 10px;text-align:left">Описание</th>
+            <th style="padding:7px 10px;text-align:left">Статус</th>
+            <th style="padding:7px 10px;text-align:left">Ответственный</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lvl1Reqs.map((x,i)=>`<tr style="background:${i%2===0?'#fff':'#fff5f5'};border-bottom:1px solid #fecaca">
+            <td style="padding:6px 10px;font-weight:700;color:#f53d2d;font-family:monospace">${pad(x.id)}</td>
+            <td style="padding:6px 10px">${x.location||'—'}</td>
+            <td style="padding:6px 10px;max-width:350px">${(x.description||'').substring(0,80)}${x.description?.length>80?'…':''}</td>
+            <td style="padding:6px 10px">${{new:'Новая',work:'В работе',approved:'Принята',completed:'Выполнена'}[x.status]||x.status}</td>
+            <td style="padding:6px 10px">${x.assigned_to||'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : ''}
+    <!-- Footer -->
+    <div style="background:#0f1c2c;padding:10px 24px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:10px;color:rgba(255,255,255,.5)">Akkermann Pulse | Страница 1</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.5)">${now}</span>
+    </div>
+  </div>`;
+
+  // Create hidden container, render, capture
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+  toast('⏳ Формируется PDF…', 'info');
+  try {
+    await new Promise(r => setTimeout(r, 300)); // let render settle
+    const canvas = await html2canvas(container.querySelector('#pdf-report'), {
+      scale: 2, useCORS: true, logging: false,
+      backgroundColor: '#ffffff', width: 1050
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const imgRatio = canvas.height / canvas.width;
+    const imgH = pageW * imgRatio;
+    // If content fits on one page
+    if (imgH <= pageH) {
+      doc.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
+    } else {
+      // Multi-page: slice canvas
+      const sliceH = Math.floor(canvas.width * (pageH / pageW));
+      let offsetY = 0;
+      while (offsetY < canvas.height) {
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = Math.min(sliceH, canvas.height - offsetY);
+        const ctx2 = sliceCanvas.getContext('2d');
+        ctx2.drawImage(canvas, 0, -offsetY);
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+        if (offsetY > 0) doc.addPage();
+        doc.addImage(sliceData, 'JPEG', 0, 0, pageW, pageH);
+        offsetY += sliceH;
+      }
     }
+    doc.save(`akkermann_report_${new Date().toISOString().slice(0,10)}.pdf`);
+    toast('✅ PDF скачан');
+  } catch(err) {
+    toast('Ошибка PDF: ' + err.message, 'err');
+    console.error(err);
+  } finally {
+    document.body.removeChild(container);
   }
-  // Footer
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i=1;i<=pageCount;i++) {
-    doc.setPage(i);
-    doc.setFontSize(8); doc.setTextColor(150,150,150);
-    doc.text(`Akkermann Pulse | Стр. ${i} из ${pageCount}`, 14, 205);
-    doc.text(now, 220, 205);
-  }
-  doc.save(`akkermann_report_${new Date().toISOString().slice(0,10)}.pdf`);
-  toast('✅ PDF скачан');
 }
 
 // ── SLA OVERDUE TELEGRAM ALERTS ───────────────────────────────────────────
